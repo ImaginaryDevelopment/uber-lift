@@ -6,7 +6,6 @@ const clientId = 'SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz'
 const clientSecret = process.env.ubersecret
 if(clientSecret == null)
     throw 'please set the ubersecret env variable to your client_secret'
-console.log('secret:' + clientSecret)
 const app = express()
 const port = process.env.PORT || 3000;
 const indexHandler = (req, res) => {
@@ -21,7 +20,7 @@ const indexHandler = (req, res) => {
             client_secret: clientSecret,
             grant_type: 'authorization_code',
             code: req.query.code,
-            redirect_uri: 'http://localhost:' + port
+            redirect_uri: 'http://' + req.headers.host + (port != 80 ? ':' + port : '')
         }
         const formData = querystring.stringify(form)
         // reference: https://stackoverflow.com/questions/17121846/node-js-how-to-send-headers-with-form-data-using-request-module
