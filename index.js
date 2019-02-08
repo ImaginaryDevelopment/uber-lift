@@ -3,6 +3,10 @@ const https = require('https')
 const request = require('request')
 const querystring = require('querystring')
 const clientId = 'SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz'
+const clientSecret = process.env.ubersecret
+if(clientSecret == null)
+    throw 'please set the ubersecret env variable to your client_secret'
+console.log('secret:' + clientSecret)
 const app = express()
 const port = process.env.PORT || 3000;
 const indexHandler = (req, res) => {
