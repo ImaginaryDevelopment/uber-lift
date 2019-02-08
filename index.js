@@ -6,7 +6,9 @@ const clientId = 'SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz'
 const app = express()
 const port = process.env.PORT || 3000;
 const indexHandler = (req, res) => {
+    // reference: https://stackoverflow.com/questions/6912584/how-to-get-get-query-string-variables-in-express-js-on-node-js
     if (req.query.code == null) {
+        // reference: https://stackoverflow.com/questions/26079611/node-js-typeerror-path-must-be-absolute-or-specify-root-to-res-sendfile-failed
         res.sendFile(__dirname + '/public/index.html')
     } else {
         // res.send('Hello code! ' + req.query.code)
@@ -18,6 +20,7 @@ const indexHandler = (req, res) => {
             redirect_uri: 'http://localhost:' + port
         }
         const formData = querystring.stringify(form)
+        // reference: https://stackoverflow.com/questions/17121846/node-js-how-to-send-headers-with-form-data-using-request-module
         request({
             headers: { 'Content-Length': formData.length, 'Content-Type': 'application/x-www-form-urlencoded' },
             uri: 'https://login.uber.com/oauth/v2/token',
@@ -31,12 +34,7 @@ const indexHandler = (req, res) => {
             } else if(bearer.access_token){
                 res.send('Bearer :' + bearer.access_token)
             }
-            // res.send('Bearer :' + JSON.stringify(body));
-            // res.send('Bearer :' + bearer);
         })
-
-
-
     }
 };
 app.get('/', indexHandler)
