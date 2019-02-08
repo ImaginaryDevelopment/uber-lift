@@ -1,50 +1,51 @@
-
-    <!DOCTYPE html>
-<html>
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>Simple Markers</title>
-    <style>
-      /* Always set the map height explicitly to define the size of the div
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>Simple Markers</title>
+  <style>
+    /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
-      #map {
-        height: 100%;
-      }
-      /* Optional: Makes the sample page fill the window. */
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="map"></div>
-    <script>
+    #map {
+      height: 100%;
+    }
 
-      function initMap() {
-        var myLatLng = {lat: -25.363, lng: 131.044};
+    /* Optional: Makes the sample page fill the window. */
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
 
-        var map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 4,
-          center: myLatLng
-        });
-        var markerSan_Francisco = new google.maps.Marker({position: {lat: 37.774900, lng:-122.419400},map:map,title:'San Francisco'});
-        var markerSan_Francisco = new google.maps.Marker({position: {lat: 37.774900, lng:-122.419400},map:map,title:'San Francisco'});
-        var markerSan_Francisco = new google.maps.Marker({position: {lat: 37.774900, lng:-122.419400},map:map,title:'San Francisco'});
-        var markerSan_Francisco = new google.maps.Marker({position: {lat: 37.774900, lng:-122.419400},map:map,title:'San Francisco'});
-        var markerSan_Francisco = new google.maps.Marker({position: {lat: 37.774900, lng:-122.419400},map:map,title:'San Francisco'});
-        var markerXpress = new google.maps.Marker({position: {lat: 30.251183, lng:-81.590179},map:map,title:'Xpress'});
-        var markerSan_Francisco = new google.maps.Marker({position: {lat: 37.774900, lng:-122.419400},map:map,title:'San Francisco'});
-        var markerSan_Francisco = new google.maps.Marker({position: {lat: 37.774900, lng:-122.419400},map:map,title:'San Francisco'});
-        var markerSan_Francisco = new google.maps.Marker({position: {lat: 37.774900, lng:-122.419400},map:map,title:'San Francisco'});
-        var markerSan_Francisco = new google.maps.Marker({position: {lat: 37.774900, lng:-122.419400},map:map,title:'San Francisco'});
+<body>
+  <div id="map"></div>
+  <script>
 
-      }
-    </script>
-    <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDV3nmdg4uqjEstQI4v_tXaEXg0AdNwzfY&callback=initMap">
-    </script>
-  </body>
+    function initMap() {
+      var myLatLng = { lat: -25.363, lng: 131.044 };
+
+      var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 4,
+        center: myLatLng
+      });
+      var markerSan_Francisco = new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+      var markerSan_Francisco = new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+      var markerSan_Francisco = new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+      var markerSan_Francisco = new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+      var markerSan_Francisco = new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+      var markerXpress = new google.maps.Marker({ position: { lat: 30.251183, lng: -81.590179 }, map: map, title: 'Xpress' });
+      var markerSan_Francisco = new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+      var markerSan_Francisco = new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+      var markerSan_Francisco = new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+      var markerSan_Francisco = new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+    }
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDV3nmdg4uqjEstQI4v_tXaEXg0AdNwzfY&callback=initMap">
+  </script>
+</body>
+
 </html>
