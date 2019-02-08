@@ -7,19 +7,31 @@ if(clientSecret == null)
 const app = express()
 const port = process.env.PORT || 3000;
 const indexHandler = (req, res) => {
+    const sendError = e => res.send('Error:' + JSON.stringify(e))
+    if(req.cookies != null){
+        res.send('Cookies:' + JSON.stringify(req.cookies))
+        // ubering.getHistory(req.cookies('bearer'),() => {}, (err,res2,body) => res.send('Error:' + JSON.stringify({err,res2,body})))
+        return;
+    }
     // reference: https://stackoverflow.com/questions/6912584/how-to-get-get-query-string-variables-in-express-js-on-node-js
     if (req.query.code == null) {
         // reference: https://stackoverflow.com/questions/26079611/node-js-typeerror-path-must-be-absolute-or-specify-root-to-res-sendfile-failed
         res.sendFile(__dirname + '/public/index.html')
     } else {
         console.log('ubering!')
-        ubering.getBearer(clientSecret,req.query.code,req.headers.host,port,bearer =>
-                res.send('Bearer :' + bearer), e => res.send('Error:' + JSON.stringify(e))
-                )
+        ubering.getBearer(clientSecret,req.query.code,req.headers.host,port,
+                bearer =>{
+                    res.cookie('bearer', bearer)
+                    ubering.getHistory(bearer,history =>{
+                        res.send(history)
+                    },sendError) },
+                sendError
+        )
     }
 };
 app.get('/', indexHandler)
 app.get('/hello', (req, res) => res.send('Hello World!'))
+app.get('/history/sample', (req,res) => res.sendfile(__dirname + '/public/samplehistory.json'))
 app.get('/markers', (req, res) => res.sendFile(__dirname + '/public/markers.html'))
-app.use(express.static('public', ['html', 'htm']))
+app.use(express.static('public', ['html', 'htm','json']))
 app.listen(port, () => console.log("Example app listening on port " + port))
