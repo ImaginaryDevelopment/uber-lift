@@ -2,6 +2,12 @@ const querystring = require('querystring')
 const request = require('request')
 
 const clientId = process.env.clientid || 'SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz'
+const getAuthority = (host,port) =>'http://' + host + (port != 80 && host.indexOf(':') <0 ? ':' + port : '')
+exports.getAuthUrl= (host,port,relRedirect) =>
+            'https://login.uber.com/oauth/v2/authorize?response_type=code'
+                + '&client_id=' + clientId
+                + '&scope=history+history_lite+profile'
+                + '&redirect_uri=' + getAuthority(host,port) + relRedirect // http://localhost:3000'
 exports.getBearer = (clientSecret, code, host, port, fBearer, fErr) => {
     const form = {
         client_id: clientId,
@@ -41,6 +47,7 @@ exports.getFromUber = (bearer, uri, f, fErr) => {
         }
         if (body == null) return fErr({ err, res, body })
         const jBody = JSON.parse(body)
+        console.log('mybody', jBody, body)
         f(jBody)
     })
 }
@@ -60,11 +67,13 @@ exports.getHistory = (bearer, fHistory, fErr) => {
     })
 
 }
-exports.getMe = (bearer,f,fErr) =>{
-    exports.getFromUber(bearer,'https://api.uber.com/v1.2/me',(...theArgs) =>{
+exports.getMe = (bearer, f, fErr) => {
+    exports.getFromUber(bearer, 'https://api.uber.com/v1.2/me', me => {
+        console.log('me', me)
         // any schema validation goes here
-        // ... none at this time
-        return f.call(theArgs)
-    },fErr)
+        var isFullProfile = me.rider_id && Object.keys(me).indexOf('mobile_verified') >= 0;
+        if(!isFullProfile) console.error('scope request does not include profile')
+        return f.call(me,isFullProfile)
+    }, fErr)
 
 }

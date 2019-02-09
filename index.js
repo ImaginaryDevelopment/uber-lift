@@ -8,6 +8,11 @@ if (clientSecret == null)
 const app = express()
 const port = process.env.PORT || 3000;
 const sendErrorF = res => e => res.send('Error:' + JSON.stringify(e))
+const readFile = (relPath,fText,fErr) => fs.readFile(__dirname + relPath,'utf8',(err,text) =>{
+    if(err != null) return fErr(err)
+    fText(text)
+}
+)
 const indexHandler = (req, res) => {
     const sendError = sendErrorF(res)
     if (req.cookies != null) {
@@ -18,15 +23,21 @@ const indexHandler = (req, res) => {
     // reference: https://stackoverflow.com/questions/6912584/how-to-get-get-query-string-variables-in-express-js-on-node-js
     if (req.query.code == null) {
         // reference: https://stackoverflow.com/questions/26079611/node-js-typeerror-path-must-be-absolute-or-specify-root-to-res-sendfile-failed
-        res.sendFile(__dirname + '/public/index.html')
+        //https://login.uber.com/oauth/v2/authorize?response_type=code&client_id=SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz&scope=history+history_lite+profile&redirect_uri=http://localhost:3000
+        readFile('/public/index.html',html =>{
+            console.log('indexing', req.headers.host)
+            res.send(html.replace('@authUrl',ubering.getAuthUrl(req.headers.host,port,'')))
+        })
     } else {
         console.log('ubering!')
         ubering.getBearer(clientSecret, req.query.code, req.headers.host, port,
             bearer => {
                 res.cookie('bearer', bearer)
-                ubering.getHistory(bearer, history => {
-                    res.send(history)
-                }, sendError)
+                ubering.getMe(bearer,(me,_isFull) =>{
+                    ubering.getHistory(bearer, history => {
+                        res.send(me + '\r\n' + history)
+                    }, sendError)
+                })
             },
             sendError
         )
@@ -40,7 +51,10 @@ app.get('/history/sample/table', (_, res) => {
         if (err != null) return sendErrorF(res)(err)
         fs.readFile(__dirname + '/public/table.html', 'utf8', (err, html) => {
             if (err != null) return sendErrorF(res)(err)
-            res.send(html.replace("'@body'",raw))
+            const replaced =
+                html
+                    .replace("data = null",'data = ' + raw)
+            res.send(replaced)
         }
         )
     }
