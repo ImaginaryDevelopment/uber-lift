@@ -8,7 +8,7 @@ exports.getAuthUrl = (host, relRedirect) =>
     + '&client_id=' + clientId
     + '&scope=history+history_lite+profile'
     + '&redirect_uri=' + getAuthority(host) + relRedirect // http://localhost:3000'
-exports.getBearer = (clientSecret, code, host, fBearer, fErr) => {
+exports.getBearer = (clientSecret, code, host, fBearer) => {
     const form = {
         client_id: clientId,
         client_secret: clientSecret,
@@ -27,15 +27,15 @@ exports.getBearer = (clientSecret, code, host, fBearer, fErr) => {
         console.log('yay response?' + typeof body)
         const jBody = JSON.parse(body);
         if (jBody.error) {
-            fErr()
+            throw jBody.error
         } else if (jBody.access_token) {
             fBearer(jBody.access_token);
         }
     })
 }
-exports.getFromUber = (bearer, uri, f, fErr) => {
+exports.getFromUber = (bearer, uri, f) => {
     if (bearer == null)
-        return fErr('no bearer for uri ' + uri)
+        throw ('no bearer for uri ' + uri)
     request({
         headers: { Authorization: 'Bearer ' + bearer },
         uri,
@@ -43,37 +43,38 @@ exports.getFromUber = (bearer, uri, f, fErr) => {
     }, (err, res, body) => {
         if (err != null) {
             console.error(JSON.stringify(err))
-            return fErr(err, res, body)
+            throw ('getFromUber body:' + body)
         }
-        if (body == null) return fErr({ err, res, body })
+        if (body == null) throw 'getFromUber no body'
         const jBody = JSON.parse(body)
         console.log('mybody', jBody, body)
         f(jBody)
     })
 }
-exports.getHistory = (bearer, fHistory, fErr) => {
+exports.getHistory = (bearer, fHistory) => {
     request({
         headers: { Authorization: 'Bearer ' + bearer },
         uri: 'https://api.uber.com/v1.2/history',
         method: 'GET'
     }, (err, res, body) => {
         if (err != null) {
-            console.error(JSON.stringify(err))
-            return fErr(err, res, body)
+            var e = JSON.stringify(err)
+            console.error(e)
+            throw e
         }
-        if (body == null) return fErr({ err, res, body })
+        if (body == null) throw 'getHistory no body'
         const jBody = JSON.parse(body)
         fHistory(jBody)
     })
 
 }
-exports.getMe = (bearer, f, fErr) => {
+exports.getMe = (bearer, f) => {
     exports.getFromUber(bearer, 'https://api.uber.com/v1.2/me', me => {
         console.log('me', me)
         // any schema validation goes here
         var isFullProfile = me.rider_id && Object.keys(me).indexOf('mobile_verified') >= 0;
         if (!isFullProfile) console.error('scope request does not include profile')
         return f.call(me, isFullProfile)
-    }, fErr)
+    })
 
 }

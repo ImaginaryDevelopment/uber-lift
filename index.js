@@ -4,32 +4,21 @@ const cookieParser = require('cookie-parser')
 const ubering = require('./ubering.js')
 const fs = require('fs')
 const clientSecret = process.env.ubersecret
+const util = require('util')
+
 if (clientSecret == null)
     throw 'please set the ubersecret env variable to your client_secret'
 const port = process.env.PORT || 3000;
 const app = express()
 app.use(cookieParser())
-const tryMe = (f, fErr) => (...args) => {
-    try {
-        f.apply(null, args)
-    } catch (e) {
-        fErr(e, ...args)
-    }
-}
 
-// jsDoc doesn't like partial application: https://github.com/jsdoc3/jsdoc/issues/1286
-const tryHandle = f => (req, res, next, ...args) => {
-    tryMe(() => f(req, res, next, ...args), (e, ...errArgs) => next(e, ...errArgs))()
-}
-
-const sendErrorF = (e, send) => send('Error:' + JSON.stringify(e))
+const err = e =>{throw ('Error:' + JSON.stringify(e))}
 const readFile = (relPath, fText, fErr) => fs.readFile(__dirname + relPath, 'utf8', (err, text) => {
     if (err != null) return fErr(err)
     fText(text)
 })
 
 const indexHandler = (req, res) => {
-    const sendError = e => sendErrorF(res.send, e)
     if (req.cookies != null) {
         if (req.cookies.bearer != null)
             return res.redirect('/home')
@@ -57,17 +46,16 @@ const indexHandler = (req, res) => {
     }
 };
 const homeHandler = (req, res) => {
-    const sendError = e => sendErrorF(e, res.send)
     if (req.cookies == null || req.cookies.bearer == null) return res.redirect('/')
     ubering.getMe(bearer, (me, _isFull) => {
-        ubering.getHistory(bearer, history => {
+        ubering.getHistory(req.cookies.bearer, history => {
             res.send(me + '\r\n' + history)
-        }, sendError)
+        })
     })
 }
 app.get('/hello', (_req, res) => res.send('Hello World!'))
-app.get('/', tryHandle(indexHandler))
-app.get('/home', tryHandle(homeHandler))
+app.get('/', indexHandler)
+app.get('/home', homeHandler)
 app.get('/history/sample/raw', (_req, res) => res.sendfile(__dirname + '/public/samplehistory.json'))
 app.get('/history/sample/table', (_, res) => {
     fs.readFile(__dirname + '/public/samplehistory.json', 'utf8', (err, raw) => {
@@ -86,4 +74,10 @@ app.get('/history/sample/table', (_, res) => {
 app.get('/markers', (req, res) => res.sendFile(__dirname + '/public/markers.html'))
 app.use(express.static('client'))
 app.use(express.static('public', ['html', 'htm', 'json']))
+// express error-handling: https://expressjs.com/en/guide/error-handling.html
+app.use(function (err,req,res,next){
+    console.error(err.stack)
+    // log this to database in prod, not to customer
+    res.status(500).send('Error:' + util.inspect({err,req,res,next}))
+})
 app.listen(port, () => console.log("Example app listening on port " + port))
