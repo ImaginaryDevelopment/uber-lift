@@ -46,7 +46,7 @@ getOrCreateSchema('History',{
 
 exports.connect = fConn => {
     // returns a promise of a connection
-    mongoose.connect('mongodb://localhost:27017/test', { useNewUrlParser: true })
+    mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/test', { useNewUrlParser: true })
     const db = mongoose.connection
     db.once('open', () => {
         fConn(db)
