@@ -1,6 +1,386 @@
+/* global global module window */
 "use strict";
 // export module Extensions{
-var findJsParent = () => ((typeof module !== "undefined" && module && module.exports
-    || typeof module !== "undefined" && module)
-    || typeof global !== "undefined" && global
-    || typeof window !== "undefined" && window);
+var findJsParent = function () {
+    return ((typeof module !== "undefined" && module && module.exports
+        || typeof module !== "undefined" && module)
+        || typeof global !== "undefined" && global
+        || typeof window !== "undefined" && window);
+};
+// prototypal extensions and polyfills
+var addImpureExtensions = function () {
+    // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
+    // polyfill for older browsers, which this project really doesn't need
+    if (!Object.keys) {
+        Object.keys = (function () {
+            'use strict';
+            var hasOwnProperty = Object.prototype.hasOwnProperty, hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString'), dontEnums = [
+                'toString',
+                'toLocaleString',
+                'valueOf',
+                'hasOwnProperty',
+                'isPrototypeOf',
+                'propertyIsEnumerable',
+                'constructor'
+            ], dontEnumsLength = dontEnums.length;
+            return function (obj) {
+                if (typeof obj !== 'object' && (typeof obj !== 'function' || obj === null)) {
+                    throw new TypeError('Object.keys called on non-object');
+                }
+                var result = [], prop, i;
+                for (prop in obj) {
+                    if (hasOwnProperty.call(obj, prop)) {
+                        result.push(prop);
+                    }
+                }
+                if (hasDontEnumBug) {
+                    for (i = 0; i < dontEnumsLength; i++) {
+                        if (hasOwnProperty.call(obj, dontEnums[i])) {
+                            result.push(dontEnums[i]);
+                        }
+                    }
+                }
+                return result;
+            };
+        }());
+    }
+    String['trim'] = function (s) {
+        if (s != null)
+            return s.trim();
+        return s;
+    };
+    // adding static and instance methods
+    String['contains'] = function (s, delimiter) {
+        return s != null && delimiter != null && delimiter != "" && s.indexOf(delimiter) >= 0;
+    };
+    String.prototype.contains = function (delimiter) {
+        return String.contains(this, delimiter);
+    };
+    // http://stackoverflow.com/a/1050782/57883
+    Date['addHours'] = function (dt, h) {
+        dt.setTime(dt.getTime() + (h * 60 * 60 * 1000));
+    };
+    Date.prototype.addHours = function (h) {
+        Date.addHours(this, h);
+    };
+    Date.isValidDate = function (dt) {
+        if (dt == null)
+            return false;
+        // check if it is a Date via https://stackoverflow.com/questions/643782/how-to-check-whether-an-object-is-a-date
+        if (typeof dt.getMonth !== "function")
+            return false;
+        if (!(dt instanceof Date) && Object.prototype.toString.call(dt) !== '[object Date]')
+            return false;
+        // check if it is a valid Date
+        // `isNan <| dt.ValueOf()` is bad in some cases : `new Date('Do NOT Convert Me as a date 1')` still has a valueOf in spite of it being an Invalid Date
+        var check1 = !isNaN(dt.valueOf());
+        var check2 = dt.toString() != "Invalid Date";
+        return !isNaN(dt.valueOf()) && check2;
+    };
+    if (!Date.today) {
+        Date.today = function () {
+            var today = new Date();
+            return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        };
+    }
+    Date.prototype.yyyyMMdd = function (separator) {
+        var mm = this.getMonth() + 1;
+        var dd = this.getDate().toString();
+        if (separator == null)
+            separator = '/';
+        return [this.getFullYear(), mm < 10 ? '0' + mm : mm, dd < 10 ? '0' + dd : dd].join(separator);
+    };
+    Date.prototype.MMddyyyy = function (separator) {
+        var mm = this.getMonth() + 1;
+        var dd = this.getDate().toString();
+        if (separator == null)
+            separator = '/';
+        return [mm < 10 ? '0' + mm : mm, dd < 10 ? '0' + dd : dd, this.getFullYear()].join(separator);
+    };
+    Date['to_yyyyMMdd'] = function (dateish, separator) {
+        if (dateish instanceof Date) {
+            return dateish.yyyyMMdd(separator);
+        }
+        return new Date(dateish).yyyyMMdd(separator);
+    };
+    Date['to_MMddyyyy'] = function (dateish, separator) {
+        if (dateish instanceof Date) {
+            return dateish.MMddyyyy(separator);
+        }
+        return new Date(dateish).MMddyyyy(separator);
+    };
+    // from https://stackoverflow.com/questions/6982692/html5-input-type-date-default-value-to-today
+    Date.prototype.toDateInputValue = (function () {
+        var local = new Date(this);
+        local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+        return local.toJSON().slice(0, 10);
+    });
+    // code from http://stackoverflow.com/a/149099/57883
+    // c is the number of decimals to show
+    // d is decimal separator
+    // t is the thousands separator
+    // this function uses redeclaration for brevity, so the implementation signature is slightly bastardized for ts
+    Number.prototype.formatMoney = function (c, d, t) {
+        var n = this, c = isNaN(c = Math.abs(c)) ? 2 : c, // eslint-disable-line no-redeclare
+        d = d == undefined ? "." : d, // eslint-disable-line no-redeclare
+        t = t == undefined ? "," : t, // eslint-disable-line no-redeclare
+        s = n < 0 ? "-" : "", i = String(parseInt(n = Math.abs(Number(n) || 0).toFixed(c))), j = (j = i.length) > 3 ? j % 3 : 0;
+        return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - +i).toFixed(c).slice(2) : "");
+    };
+    // untested, going to use replace instead of remove
+    // Array.prototype['remove'] = function<T>(item:T){
+    // mutation : removes an item from the array, returning the removed item or undefined
+    Array.prototype.remove = function (item) {
+        var index = this.indexOf(item);
+        if (index >= 0)
+            return this.splice(index, 1)[0];
+        return undefined;
+    };
+    // Array.prototype.replace = function<T>(item:T,replacement:T){
+    Array.prototype.replace = function (item, replacement) {
+        var index = this.indexOf(item);
+        if (index >= 0) {
+            this[index] = replacement;
+            return true;
+        }
+        else {
+            return false;
+        }
+    };
+};
+(function (exports) {
+    addImpureExtensions();
+    exports.findJsParent = exports.findJsParent || findJsParent;
+    exports.isDifferent = exports.isDifferent = function (x, y) {
+        var isX = x != null;
+        var isY = y != null;
+        if (!isX && !isY)
+            return false;
+        if (isX && !isY)
+            return true;
+        if (isY && !isX)
+            return true;
+        return x != y;
+    };
+    exports.todo = function (msg) {
+        console.error((msg ? msg + ":" : '') + 'item stubbed as todo called');
+    };
+    exports.guid = function () { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    }); };
+    exports.redirect = function (url, app) {
+        if (app === void 0) { app = exports; }
+        console.log('redirecting to ', url);
+        if (app.location != null) {
+            app.location.href = url;
+        }
+        else if (app.document != null) {
+            app.document.location.replace(url);
+        }
+        else {
+            console.error('unable to find redirection mechanism');
+        }
+    };
+    exports.post = function (url, onLoad, onFailure, contentType, data) {
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", onLoad);
+        oReq.addEventListener("error", onFailure);
+        oReq.open('POST', url, true);
+        oReq.setRequestHeader('Content-type', contentType);
+        switch (contentType) {
+            case 'application/json':
+                var body = JSON.stringify(data);
+                oReq.send(body);
+                break;
+            case 'application/x-www-form-urlencoded':
+            default:
+                oReq.send(data);
+                break;
+        }
+    };
+    exports.fetchB = function (url, onLoad, onFailure, method) {
+        var oReq = new XMLHttpRequest();
+        oReq.addEventListener("load", onLoad);
+        oReq.addEventListener("error", onFailure);
+        oReq.open(method || "GET", url);
+        oReq.send();
+    };
+    exports.fetchBT = function (url, onLoad, onFailure, method, onLoadFailure) {
+        var onLoadWrapped = function (pe) {
+            console.group('fetchT onLoadWrapped', url);
+            var t;
+            try {
+                // (exports as any).evt = evt;
+                t = pe.target;
+                if (t.status == 200) {
+                    if (t.getResponseHeader("Content-Type") !== "") {
+                    }
+                    var model = JSON.parse(t.responseText);
+                    onLoad(model);
+                }
+                else {
+                    console.log('calling failure for status', t.status);
+                    debugger;
+                    onFailure(pe);
+                }
+            }
+            catch (ex) {
+                if (onLoadFailure != undefined) {
+                    onLoadFailure(ex);
+                }
+                else {
+                    console.error("fetchBT failed", ex);
+                    throw ex;
+                }
+            }
+            finally {
+                console.groupEnd();
+            }
+        };
+        exports.fetchB(url, onLoadWrapped, onFailure, method);
+    };
+    exports.inspect = function (x, title, propNames) {
+        var logIt = function (value) { return title ? console.log(title, value) : console.log(value); };
+        if (propNames) {
+            if (Array.isArray(propNames)) {
+                propNames.map(function (propName) { return logIt(x[propName]); });
+            }
+            else {
+                logIt(x[propNames]);
+            }
+        }
+        else
+            logIt(x);
+        return x;
+    };
+    exports.before = function (s, delimiter) {
+        if (!delimiter)
+            throw Error('no delimiter provided in "' + s + "'.before(delimiter)");
+        var i = s.indexOf(delimiter);
+        if (i < 0)
+            throw Error("delimiter('" + delimiter + "') not found in '" + s + "'");
+        return s.substr(0, i);
+    };
+    String.prototype.before = function (delimiter) {
+        return exports.before(this, delimiter);
+    };
+    exports.after = function (s, delimiter) {
+        if (!delimiter)
+            throw Error('no delimiter provided in "' + s + "'.after(delimiter)");
+        var i = s.indexOf(delimiter);
+        if (i < 0)
+            throw Error("delimiter('" + delimiter + "') not found in '" + s + "'");
+        return s.substr(s.indexOf(delimiter) + delimiter.length);
+    };
+    String.prototype.after = function (delimiter) {
+        return exports.after(this, delimiter);
+    };
+    // http://stackoverflow.com/questions/728360/how-do-i-correctly-clone-a-javascript-object
+    var clone = exports.clone = function (obj) {
+        // Handle the 3 simple types, and null or undefined
+        if (null == obj || "object" != typeof obj)
+            return obj;
+        // Handle Date
+        if (obj instanceof Date) {
+            var copy = new Date();
+            copy.setTime(obj.getTime());
+            return copy;
+        }
+        // Handle Array
+        if (obj instanceof Array && Array.isArray(obj)) {
+            var copy = [];
+            for (var i = 0, len = obj.length; i < len; i++) {
+                copy[i] = clone(obj[i]);
+            }
+            return copy;
+        }
+        // Handle Object
+        if (obj instanceof Object) {
+            var copy = {};
+            for (var attr in obj) {
+                if (obj.hasOwnProperty(attr))
+                    copy[attr] = clone(obj[attr]);
+            }
+            return copy;
+        }
+        throw new Error("Unable to copy obj! Its type isn't supported.");
+    };
+    // type PickDelegate =
+    // since the syntax doesn't seem to support object literal picks {[key]:value}, make a syntax helper
+    exports.makePick = function (key, value) {
+        var x = {};
+        x[key] = value;
+        return x;
+    };
+    var pickValue = function () {
+        return function (value) { return value; };
+    };
+    exports.makePickFromObj = pickValue;
+    // add compiler error for places whose accept type is wider than what we want to be constrained to
+    // https://schneidenbach.gitbooks.io/typescript-cookbook/nameof-operator.html
+    exports.nameof = function (name) { return name; };
+    // const nameof = <T>(name: keyof T) => name;
+    exports.flattenArray = function (a, recurse) {
+        if (a == null)
+            return [];
+        if (Array.isArray(a)) {
+            var b = a;
+            var result = [].concat.apply([], b);
+            if (!recurse)
+                return result;
+            var index;
+            while ((index = result.findIndex(Array.isArray)) > -1)
+                result.splice.apply(result, [index, 1].concat(result[index]));
+            return result;
+        }
+        return [a];
+    };
+    exports.isDefined = function (o) { return typeof o !== 'undefined' && o != null; };
+    exports.isPositive = function (x) { return +x > 0; };
+    var getValidateClasses = exports.getValidateClasses =
+        function (isValid) {
+            if (isValid === undefined)
+                return [];
+            // returning bootstrap-classes
+            switch (isValid) {
+                case true:
+                    return [];
+                case 'success':
+                    return ['has-success'];
+                case false:
+                case 'danger':
+                case 'error':
+                    return ['has-error'];
+                case 'warn':
+                default:
+                    return ['has-warning'];
+            }
+        };
+    exports.debounce = (function () {
+        var timer = 0;
+        return (function (callback, ms) {
+            if (typeof (callback) !== "function")
+                throw callback;
+            // this method does not ever throw, or complain if passed an invalid id
+            clearTimeout(timer);
+            // any needed here, because NodeJs returns a non-number type
+            timer = setTimeout(callback, ms); //setTimeout(callback,ms);
+        });
+    })();
+    var debounceChange = function (callback, e) {
+        var args = [];
+        for (var _i = 2; _i < arguments.length; _i++) {
+            args[_i - 2] = arguments[_i];
+        }
+        if (!exports.isDefined(callback)) {
+            console.info('no callback for debounceChange', e.target, typeof callback, callback);
+            return;
+        }
+        e.persist();
+        args.unshift(e.target.value);
+        exports.debounce(function () { return callback.apply(void 0, args); }, 500);
+    };
+    exports.debounceChange = debounceChange;
+    return exports;
+})(findJsParent());
