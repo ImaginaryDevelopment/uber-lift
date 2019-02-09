@@ -17,7 +17,7 @@ exports.getBearer = (clientSecret, code, host, port, fBearer, fError) => {
         uri: 'https://login.uber.com/oauth/v2/token',
         body: formData,
         method: 'POST'
-    }, function (err, res2, body) {
+    }, function (_err, _res, body) {
         console.log('yay response?' + typeof body)
         const jBody = JSON.parse(body);
         if (jBody.error) {
@@ -26,19 +26,37 @@ exports.getBearer = (clientSecret, code, host, port, fBearer, fError) => {
             fBearer(jBody.access_token);
         }
     })
+}
+exports.getFromUber = (bearer, uri, f, fError) => {
+    if (bearer == null)
+        return fError('no bearer for uri ' + uri)
+    request({
+        headers: { Authorization: 'Bearer ' + bearer },
+        uri,
+        method: 'GET'
+    }, (err, res, body) => {
+        if (err != null) {
+            console.error(JSON.stringify(err))
+            return fError(err, res, body)
+        }
+        if (body == null) return fError({ err, res, body })
+        const jBody = JSON.parse(body)
+        f(jBody)
+    }
+    )
 
 }
-exports.getHistory = (bearer,fHistory, fError) => {
+exports.getHistory = (bearer, fHistory, fError) => {
     request({
         headers: { Authorization: 'Bearer ' + bearer },
         uri: 'https://api.uber.com/v1.2/history',
         method: 'GET'
     }, (err, res, body) => {
-        if(err != null){
+        if (err != null) {
             console.error(JSON.stringify(err))
-            return fError(err,res,body)
+            return fError(err, res, body)
         }
-        if(body == null) return fError({err,res,body})
+        if (body == null) return fError({ err, res, body })
         const jBody = JSON.parse(body)
         fHistory(jBody)
         // res.send(body)
