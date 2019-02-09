@@ -29,8 +29,8 @@ interface HistoryData {
         if (context.body == null)
             return <div>Hello React!</div>;
         else {
-            return <div>
-                <table>
+            return (<div>
+                <table className="table is-bordered is-striped">
                     <thead>
                         <tr>
                             <th>Start</th>
@@ -50,7 +50,7 @@ interface HistoryData {
                     </tbody>
                 </table>
 
-            </div>;
+            </div>);
         }
     }
 
