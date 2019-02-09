@@ -6,10 +6,13 @@
   "dependencies": {
     "@types/react": "^16.8.2",
     "express": "^4.16.4",
-    "request": "^2.88.0"
+    "mongoose": "^5.4.10",
+    "request": "^2.88.0",
     "typescript": "^3.3.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/react-dom": "^16.8.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc"
