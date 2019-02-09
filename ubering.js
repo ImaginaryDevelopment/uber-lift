@@ -74,7 +74,7 @@ exports.getMe = (bearer, f) => {
         // any schema validation goes here
         var isFullProfile = me.rider_id && Object.keys(me).indexOf('mobile_verified') >= 0;
         if (!isFullProfile) console.error('scope request does not include profile')
-        return f.call(me, isFullProfile)
+        return f.call(null,me, isFullProfile)
     })
 
 }
