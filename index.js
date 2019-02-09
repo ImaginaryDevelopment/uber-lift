@@ -18,8 +18,8 @@ const tryMe = (f, fErr) => (...args) => {
 }
 
 // jsDoc doesn't like partial application: https://github.com/jsdoc3/jsdoc/issues/1286
-const tryHandle = f => (req,res,next,...args) =>{
-    tryMe(() => f(req,res,next,...args),(e, ...errArgs) => next(e,...errArgs)) ()
+const tryHandle = f => (req, res, next, ...args) => {
+    tryMe(() => f(req, res, next, ...args), (e, ...errArgs) => next(e, ...errArgs))()
 }
 
 const sendErrorF = (e, send) => send('Error:' + JSON.stringify(e))
@@ -31,7 +31,7 @@ const readFile = (relPath, fText, fErr) => fs.readFile(__dirname + relPath, 'utf
 const indexHandler = (req, res) => {
     const sendError = e => sendErrorF(res.send, e)
     if (req.cookies != null) {
-        if(req.cookies.bearer != null)
+        if (req.cookies.bearer != null)
             return res.redirect('/home')
         res.send('Cookies:' + JSON.stringify(req.cookies))
         // ubering.getHistory(req.cookies('bearer'),() => {}, (err,res2,body) => res.send('Error:' + JSON.stringify({err,res2,body})))
@@ -49,7 +49,7 @@ const indexHandler = (req, res) => {
         console.log('ubering!')
         ubering.getBearer(clientSecret, req.query.code, req.headers.host,
             bearer => {
-                res.cookie('bearer', bearer,)
+                res.cookie('bearer', bearer)
                 res.redirect('/home')
             },
             sendError
@@ -57,28 +57,17 @@ const indexHandler = (req, res) => {
     }
 };
 const homeHandler = (req, res) => {
-    const sendError = e => sendErrorF(res.send, e)
-    if (req.cookies != null) {
-        res.send('Cookies:' + JSON.stringify(req.cookies))
-        // ubering.getHistory(req.cookies('bearer'),() => {}, (err,res2,body) => res.send('Error:' + JSON.stringify({err,res2,body})))
-        return;
-    }
-    if (req.query.code == null) {
-    } else {
-        ubering.getMe(bearer, (me, _isFull) => {
-            ubering.getHistory(bearer, history => {
-                res.send(me + '\r\n' + history)
-            }, sendError)
-        })
-    }
-
+    const sendError = e => sendErrorF(e, res.send)
+    if (req.cookies == null || req.cookies.bearer == null) return res.redirect('/')
+    ubering.getMe(bearer, (me, _isFull) => {
+        ubering.getHistory(bearer, history => {
+            res.send(me + '\r\n' + history)
+        }, sendError)
+    })
 }
 app.get('/hello', (_req, res) => res.send('Hello World!'))
 app.get('/', tryHandle(indexHandler))
-app.get('/home',tryHandle((req,res) =>{
-    console.log('cookies', req.cookies)
-    res.send('hello home' + JSON.stringify(req.cookies))
-}))
+app.get('/home', tryHandle(homeHandler))
 app.get('/history/sample/raw', (_req, res) => res.sendfile(__dirname + '/public/samplehistory.json'))
 app.get('/history/sample/table', (_, res) => {
     fs.readFile(__dirname + '/public/samplehistory.json', 'utf8', (err, raw) => {
