@@ -9,7 +9,7 @@ branding source: https://studio.tailorbrands.com/business/28308653/wizard/logos/
 html{
     background-color: #014D5D
 }
-#watermark
+#watermark /* https://stackoverflow.com/questions/21458162/creating-watermark-using-html-and-css */
 {
  position: absolute;
  top:0px;
@@ -30,6 +30,7 @@ body {
     font-family: "Adobe Garamond Pro Bold", Georgia, "Times New Roman", Times, serif;
     font-size: 13px;
     color: #061C37;
+    /* https://www.w3schools.com/css/css3_gradients.asp */
     background-image: linear-gradient(#073BA1,#014D5D);
     background: #014D5D url(images/background.png);
     background-repeat: repeat-x;
