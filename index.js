@@ -17,15 +17,22 @@ const tryMe = (f, fErr) => (...args) => {
     }
 }
 
+// jsDoc doesn't like partial application: https://github.com/jsdoc3/jsdoc/issues/1286
+const tryHandle = f => (req,res,next,...args) =>{
+    tryMe(() => f(req,res,next,...args),(e, ...errArgs) => next(e,...errArgs)) ()
+}
+
 const sendErrorF = (e, send) => send('Error:' + JSON.stringify(e))
 const readFile = (relPath, fText, fErr) => fs.readFile(__dirname + relPath, 'utf8', (err, text) => {
     if (err != null) return fErr(err)
     fText(text)
-}
-)
+})
+
 const indexHandler = (req, res) => {
     const sendError = e => sendErrorF(res.send, e)
     if (req.cookies != null) {
+        if(req.cookies.bearer != null)
+            return res.redirect('/home')
         res.send('Cookies:' + JSON.stringify(req.cookies))
         // ubering.getHistory(req.cookies('bearer'),() => {}, (err,res2,body) => res.send('Error:' + JSON.stringify({err,res2,body})))
         return;
@@ -67,12 +74,11 @@ const homeHandler = (req, res) => {
 
 }
 app.get('/hello', (_req, res) => res.send('Hello World!'))
-app.get('/', tryMe(indexHandler, (e, _req, res, ...args) => sendErrorF(e, res.send, ...args)))
-app.get('/home',(req,res) =>{
-
+app.get('/', tryHandle(indexHandler))
+app.get('/home',tryHandle((req,res) =>{
     console.log('cookies', req.cookies)
     res.send('hello home' + JSON.stringify(req.cookies))
-})
+}))
 app.get('/history/sample/raw', (_req, res) => res.sendfile(__dirname + '/public/samplehistory.json'))
 app.get('/history/sample/table', (_, res) => {
     fs.readFile(__dirname + '/public/samplehistory.json', 'utf8', (err, raw) => {
