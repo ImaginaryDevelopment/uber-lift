@@ -75,6 +75,9 @@ const homeHandler = (req, res) => {
         })
     })
 }
+app.use(express.static('client'))
+app.use(express.static('public', ['html', 'htm', 'json']))
+app.get('*', (req,_,next) => {console.log('Request for ' + req.url); next()})
 app.get('/hello', (_req, res) => res.send('Hello World!'))
 app.get('/', indexHandler)
 app.get('/home', homeHandler)
@@ -99,8 +102,6 @@ app.get('/db/profiles', (_req, res) => {
     )
 })
 app.get('/markers', (_req, res) => res.sendFile(__dirname + '/public/markers.html'))
-app.use(express.static('client'))
-app.use(express.static('public', ['html', 'htm', 'json']))
 // express error-handling: https://expressjs.com/en/guide/error-handling.html
 app.use(function (err, req, res, next) {
     console.log('in error handler')
