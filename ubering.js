@@ -47,11 +47,12 @@ exports.getFromUber = (bearer, uri, f) => {
         }
         if (body == null) throw 'getFromUber no body'
         const jBody = JSON.parse(body)
-        console.log('mybody', jBody, body)
+        // console.log('mybody', jBody, body)
         f(jBody)
     })
 }
 exports.getHistory = (bearer, fHistory) => {
+    console.log('fetching fresh history')
     request({
         headers: { Authorization: 'Bearer ' + bearer },
         uri: 'https://api.uber.com/v1.2/history',

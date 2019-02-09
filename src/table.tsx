@@ -1,6 +1,7 @@
 /// <reference path="../node_modules/@types/react/index.d.ts" />
 /// <reference types="react" />
 declare var findJsParent: () => any;
+declare var google: any;
 interface HistoryCity {
     latitude: number
     display_name: string
@@ -35,10 +36,44 @@ interface Profile {
 }
 
 (function (context) {
+    context.appendedMap = false;
+    const Marker = ({ data }: { data: HistoryData }) => {
+        if (data == null || data.history == null)
+            return <div>No history found!</div>;
+        context.initMap = () => {
+            console.log("map initializing")
+            var center = { lat: 30.251183, lng: -81.590179 };
+            var mapElement = document.getElementById('map')
+            var map = new google.maps.Map(mapElement, {
+                zoom: 4,
+                center: center,
+                // styles: [] // https://developers.google.com/maps/documentation/javascript/styling
+            });
+            new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+            new google.maps.Marker({ position: { lat: 30.251183, lng: -81.590179 }, map: map, title: 'Xpress' });
+            if (mapElement != null) {
+                console.log('removing style!')
+                context.attr = mapElement.attributes;
+                console.log(Object.keys(mapElement.attributes))
+                // setTimeout(() => mapElement!.removeAttribute('style'),1000)
+            }
+            else console.log('map not found')
+        }
+        if (!context.appendedMap) {
+            const script = document.createElement("script")
+            script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDV3nmdg4uqjEstQI4v_tXaEXg0AdNwzfY&callback=initMap";
+            script.defer = true;
+            script.async = true;
+            document.body.appendChild(script)
+        }
+        return (
+            <div data-rendered="map">
+            </div>
+        )
+    }
     const HistoryTable = ({ data }: { data: HistoryData }) => {
-        console.log(context)
-        if (context.body == null)
-            return <div>Hello React!</div>;
+        if (data == null || data.history == null)
+            return <div>No history found!</div>;
         else {
             return (<div>
                 <table className="table is-bordered is-striped">
@@ -59,7 +94,7 @@ interface Profile {
                         }
                     </tbody>
                 </table>
-
+                <Marker data={data} />
             </div>);
         }
     }
@@ -70,8 +105,8 @@ interface Profile {
             {me.last_name}, {me.first_name}
         </div>)
     }
-    const TableDisplay = ({ me, data }: { me: Profile, data: HistoryData },...rest : any[]) => {
-        console.log('tableDisplay',me,data,rest)
+    const TableDisplay = ({ me, data }: { me: Profile, data: HistoryData }, ...rest: any[]) => {
+        console.log('tableDisplay', me, data, rest)
         return (
             <div>
                 <ProfileDisplay me={me} />

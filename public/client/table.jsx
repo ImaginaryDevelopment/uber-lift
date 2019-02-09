@@ -2,11 +2,44 @@
 /// <reference path="../node_modules/@types/react/index.d.ts" />
 /// <reference types="react" />
 (function (context) {
+    context.appendedMap = false;
+    var Marker = function (_a) {
+        var data = _a.data;
+        if (data == null || data.history == null)
+            return <div>No history found!</div>;
+        context.initMap = function () {
+            console.log("map initializing");
+            var center = { lat: 30.251183, lng: -81.590179 };
+            var mapElement = document.getElementById('map');
+            var map = new google.maps.Map(mapElement, {
+                zoom: 4,
+                center: center,
+            });
+            new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
+            new google.maps.Marker({ position: { lat: 30.251183, lng: -81.590179 }, map: map, title: 'Xpress' });
+            if (mapElement != null) {
+                console.log('removing style!');
+                context.attr = mapElement.attributes;
+                console.log(Object.keys(mapElement.attributes));
+                // setTimeout(() => mapElement!.removeAttribute('style'),1000)
+            }
+            else
+                console.log('map not found');
+        };
+        if (!context.appendedMap) {
+            var script = document.createElement("script");
+            script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyDV3nmdg4uqjEstQI4v_tXaEXg0AdNwzfY&callback=initMap";
+            script.defer = true;
+            script.async = true;
+            document.body.appendChild(script);
+        }
+        return (<div data-rendered="map">
+            </div>);
+    };
     var HistoryTable = function (_a) {
         var data = _a.data;
-        console.log(context);
-        if (context.body == null)
-            return <div>Hello React!</div>;
+        if (data == null || data.history == null)
+            return <div>No history found!</div>;
         else {
             return (<div>
                 <table className="table is-bordered is-striped">
@@ -25,7 +58,7 @@
             })}
                     </tbody>
                 </table>
-
+                <Marker data={data}/>
             </div>);
         }
     };

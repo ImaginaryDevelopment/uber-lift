@@ -191,3 +191,15 @@ ul.nav a:hover {
 .dropdown:hover .dropdown-content{
     display:block
 }
+#map{
+    clear:both;
+    position: absolute;
+    top:400px;
+    left:50px;
+    min-width: 30%;
+    min-height: 300px;
+    max-width: 400px;
+    max-height: 400px;
+    margin-top: -200px;
+
+}
