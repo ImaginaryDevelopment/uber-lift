@@ -6,8 +6,12 @@ interface AjaxProps<T>{
 interface App extends Extensions{
     IsAjaxWrapperDebug:boolean
     Ajax: <T extends {}>(props:AjaxProps<T>) => JSX.Element
+    bindAllTheThings(this:React.Component<any,any>, prototype:string):void
 }
-(function(exports:App){
+
+type RComponent<T> = new (props:Readonly<T>) => React.Component<T,any>;
+
+(function(this:void,exports:App){
     exports.IsAjaxWrapperDebug = false;
     const debugAjaxWrapper:((x:string,...items:any[]) => void) = function(){
         if (exports.IsAjaxWrapperDebug) {
@@ -141,4 +145,13 @@ interface App extends Extensions{
     };
     (Ajax as any).displayName = 'Ajax';
     exports.Ajax = Ajax;
+
+    let bindAllTheThings = function(this:React.Component<any,any>, prototype:string){
+        Object.getOwnPropertyNames(prototype).filter(x => x != "constructor").map(x => {
+            if (typeof ((this as any)[x]) === "function"){
+                (this as any)[x] = (this as any)[x].bind(this);
+            }
+        });
+    };
+    exports.bindAllTheThings = bindAllTheThings;
 })(findJsParent())

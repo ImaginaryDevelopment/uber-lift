@@ -23,8 +23,7 @@ interface HistoryData {
     offset: number
     history: HistoryItem[]
 }
-type Uri = string
-interface Profile {
+interface UberProfile {
     picture: Uri
     first_name: string
     last_name: string
@@ -36,6 +35,7 @@ interface Profile {
 }
 
 (function (context) {
+    var Ajax: RComponent<AjaxProps<any>> = context.Ajax;
     context.appendedMap = false;
     const Marker = ({ data }: { data: HistoryData }) => {
         if (data == null || data.history == null)
@@ -49,17 +49,17 @@ interface Profile {
                 center: center,
                 // styles: [] // https://developers.google.com/maps/documentation/javascript/styling
             });
-            if(data.history.length == 0){
+            if (data.history.length == 0) {
                 new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
                 new google.maps.Marker({ position: { lat: 30.251183, lng: -81.590179 }, map: map, title: 'Xpress' });
-                new google.maps.Marker({position:{lat:30.32389185,lng:-81.3956847}, map:map, title: 'SourceFuse'});
+                new google.maps.Marker({ position: { lat: 30.32389185, lng: -81.3956847 }, map: map, title: 'SourceFuse' });
 
             }
             data.history
-                .map(x =>{
-                new google.maps.Marker({position:{lat:x.start_city.latitude,lng:x.start_city.longitude},map:map,title:x.start_city.display_name})
+                .map(x => {
+                    new google.maps.Marker({ position: { lat: x.start_city.latitude, lng: x.start_city.longitude }, map: map, title: x.start_city.display_name })
 
-            })
+                })
         }
         if (!context.appendedMap) {
             const script = document.createElement("script")
@@ -73,7 +73,7 @@ interface Profile {
             </div>
         )
     }
-    const HistoryTable = ({ data }: { data: HistoryData }) => {
+    const HistoryTable = ({ data }: { data: HistoryData | undefined }) => {
         if (data == null || data.history == null)
             return <div>No history found!</div>;
         else {
@@ -100,21 +100,37 @@ interface Profile {
             </div>);
         }
     }
-    const ProfileDisplay = ({ me }: { me: Profile }) => {
+    const ProfileDisplay = ({ me }: { me: UberProfile | undefined }) => {
         console.log('me', me)
         if (me == null) return <div />
         return (<div>
             {me.last_name}, {me.first_name}
         </div>)
     }
-    const TableDisplay = ({ me, data }: { me: Profile, data: HistoryData }, ...rest: any[]) => {
-        console.log('tableDisplay', me, data, rest)
-        return (
-            <div>
-                <ProfileDisplay me={me} />
-                <HistoryTable data={data} />
-            </div>
-        )
+    interface TableDisplayState {
+        data: HistoryData | undefined
+    }
+    interface TableDisplayProps {
+        me: UberProfile | undefined
+        data: HistoryData | undefined
+    }
+    class TableDisplay extends React.Component<TableDisplayProps,TableDisplayState> {
+        constructor(props: TableDisplayProps) {
+            super(props);
+            context.bindAllTheThings.call(this, TableDisplay.prototype);
+            this.state = this.getDefaultState();
+        }
+        getDefaultState(): TableDisplayState {
+            return {data:this.props.data}
+        }
+        render() {
+            return (
+                <div>
+                    <ProfileDisplay me={this.props.me} />
+                    <HistoryTable data={this.props.data} />
+                </div>
+            )
+        }
     }
 
     ReactDOM.render(

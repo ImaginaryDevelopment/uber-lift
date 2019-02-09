@@ -271,7 +271,7 @@ var addImpureExtensions = ():void => {
     };
 
 };
-(function(exports:Extensions){
+(function(this:void,exports:Extensions){
     addImpureExtensions();
     exports.findJsParent = exports.findJsParent || findJsParent;
     exports.isDifferent = exports.isDifferent = (x:any,y:any):boolean =>{

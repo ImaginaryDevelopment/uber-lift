@@ -1,7 +1,21 @@
 "use strict";
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /// <reference path="../node_modules/@types/react/index.d.ts" />
 /// <reference types="react" />
 (function (context) {
+    var Ajax = context.Ajax;
     context.appendedMap = false;
     var Marker = function (_a) {
         var data = _a.data;
@@ -70,18 +84,25 @@
             {me.last_name}, {me.first_name}
         </div>);
     };
-    var TableDisplay = function (_a) {
-        var me = _a.me, data = _a.data;
-        var rest = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            rest[_i - 1] = arguments[_i];
+    var TableDisplay = /** @class */ (function (_super) {
+        __extends(TableDisplay, _super);
+        function TableDisplay(props) {
+            var _this = _super.call(this, props) || this;
+            context.bindAllTheThings.call(_this, TableDisplay.prototype);
+            _this.state = _this.getDefaultState();
+            return _this;
         }
-        console.log('tableDisplay', me, data, rest);
-        return (<div>
-                <ProfileDisplay me={me}/>
-                <HistoryTable data={data}/>
-            </div>);
-    };
+        TableDisplay.prototype.getDefaultState = function () {
+            return { data: this.props.data };
+        };
+        TableDisplay.prototype.render = function () {
+            return (<div>
+                    <ProfileDisplay me={this.props.me}/>
+                    <HistoryTable data={this.props.data}/>
+                </div>);
+        };
+        return TableDisplay;
+    }(React.Component));
     ReactDOM.render(
     // <HistoryTable data={context.data} />,
     <TableDisplay data={context.data} me={context.me}/>, document.getElementById('body'));
