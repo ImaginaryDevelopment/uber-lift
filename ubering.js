@@ -2,19 +2,19 @@ const querystring = require('querystring')
 const request = require('request')
 
 const clientId = process.env.clientid || 'SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz'
-const getAuthority = host => 'http://' + host
-exports.getAuthUrl = (host, relRedirect) =>
+const getAuthority = (protocol, host) => protocol + '://' + host
+exports.getAuthUrl = (protocol, host, relRedirect) =>
     'https://login.uber.com/oauth/v2/authorize?response_type=code'
     + '&client_id=' + clientId
     + '&scope=history+history_lite+profile'
-    + '&redirect_uri=' + getAuthority(host) + relRedirect // http://localhost:3000'
-exports.getBearer = (clientSecret, code, host, fBearer) => {
+    + '&redirect_uri=' + getAuthority(protocol, host) + relRedirect // http://localhost:3000'
+exports.getBearer = (clientSecret, code, protocol, host, fBearer) => {
     const form = {
         client_id: clientId,
         client_secret: clientSecret,
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: getAuthority(host)
+        redirect_uri: getAuthority(protocol, host)
     }
     const formData = querystring.stringify(form)
     // reference: https://stackoverflow.com/questions/17121846/node-js-how-to-send-headers-with-form-data-using-request-module
@@ -74,7 +74,7 @@ exports.getMe = (bearer, f) => {
         // any schema validation goes here
         var isFullProfile = me.rider_id && Object.keys(me).indexOf('mobile_verified') >= 0;
         if (!isFullProfile) console.error('scope request does not include profile')
-        return f.call(null,me, isFullProfile)
+        return f.call(null, me, isFullProfile)
     })
 
 }

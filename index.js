@@ -27,11 +27,11 @@ const indexHandler = (req, res) => {
         // https://login.uber.com/oauth/v2/authorize?response_type=code&client_id=SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz&scope=history+history_lite+profile&redirect_uri=http://localhost:3000
         readFile('/public/index.html', html => {
             console.log('indexing', req.headers.host)
-            res.send(html.replace('@authUrl', ubering.getAuthUrl(req.headers.host, '')))
+            res.send(html.replace('@authUrl', ubering.getAuthUrl(req.protocol,req.headers.host, '')))
         })
     } else {
         console.log('ubering!')
-        ubering.getBearer(clientSecret, req.query.code, req.headers.host,
+        ubering.getBearer(clientSecret, req.query.code, req.protocol, req.headers.host,
             bearer => {
                 res.cookie('bearer', bearer)
                 res.redirect('/home')
