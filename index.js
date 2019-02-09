@@ -1,20 +1,30 @@
 const express = require('express')
-const https = require('https')
+const cookieParser = require('cookie-parser')
+// const https = require('https')
 const ubering = require('./ubering.js')
 const fs = require('fs')
 const clientSecret = process.env.ubersecret
 if (clientSecret == null)
     throw 'please set the ubersecret env variable to your client_secret'
-const app = express()
 const port = process.env.PORT || 3000;
-const sendErrorF = res => e => res.send('Error:' + JSON.stringify(e))
-const readFile = (relPath,fText,fErr) => fs.readFile(__dirname + relPath,'utf8',(err,text) =>{
-    if(err != null) return fErr(err)
+const app = express()
+app.use(cookieParser())
+const tryMe = (f, fErr) => (...args) => {
+    try {
+        f.apply(null, args)
+    } catch (e) {
+        fErr(e, ...args)
+    }
+}
+
+const sendErrorF = (e, send) => send('Error:' + JSON.stringify(e))
+const readFile = (relPath, fText, fErr) => fs.readFile(__dirname + relPath, 'utf8', (err, text) => {
+    if (err != null) return fErr(err)
     fText(text)
 }
 )
 const indexHandler = (req, res) => {
-    const sendError = sendErrorF(res)
+    const sendError = e => sendErrorF(res.send, e)
     if (req.cookies != null) {
         res.send('Cookies:' + JSON.stringify(req.cookies))
         // ubering.getHistory(req.cookies('bearer'),() => {}, (err,res2,body) => res.send('Error:' + JSON.stringify({err,res2,body})))
@@ -24,28 +34,46 @@ const indexHandler = (req, res) => {
     if (req.query.code == null) {
         // reference: https://stackoverflow.com/questions/26079611/node-js-typeerror-path-must-be-absolute-or-specify-root-to-res-sendfile-failed
         //https://login.uber.com/oauth/v2/authorize?response_type=code&client_id=SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz&scope=history+history_lite+profile&redirect_uri=http://localhost:3000
-        readFile('/public/index.html',html =>{
+        readFile('/public/index.html', html => {
             console.log('indexing', req.headers.host)
-            res.send(html.replace('@authUrl',ubering.getAuthUrl(req.headers.host,port,'')))
+            res.send(html.replace('@authUrl', ubering.getAuthUrl(req.headers.host, '')))
         })
     } else {
         console.log('ubering!')
-        ubering.getBearer(clientSecret, req.query.code, req.headers.host, port,
+        ubering.getBearer(clientSecret, req.query.code, req.headers.host,
             bearer => {
-                res.cookie('bearer', bearer)
-                ubering.getMe(bearer,(me,_isFull) =>{
-                    ubering.getHistory(bearer, history => {
-                        res.send(me + '\r\n' + history)
-                    }, sendError)
-                })
+                res.cookie('bearer', bearer,)
+                res.redirect('/home')
             },
             sendError
         )
     }
 };
-app.get('/', indexHandler)
-app.get('/hello', (req, res) => res.send('Hello World!'))
-app.get('/history/sample/raw', (req, res) => res.sendfile(__dirname + '/public/samplehistory.json'))
+const homeHandler = (req, res) => {
+    const sendError = e => sendErrorF(res.send, e)
+    if (req.cookies != null) {
+        res.send('Cookies:' + JSON.stringify(req.cookies))
+        // ubering.getHistory(req.cookies('bearer'),() => {}, (err,res2,body) => res.send('Error:' + JSON.stringify({err,res2,body})))
+        return;
+    }
+    if (req.query.code == null) {
+    } else {
+        ubering.getMe(bearer, (me, _isFull) => {
+            ubering.getHistory(bearer, history => {
+                res.send(me + '\r\n' + history)
+            }, sendError)
+        })
+    }
+
+}
+app.get('/hello', (_req, res) => res.send('Hello World!'))
+app.get('/', tryMe(indexHandler, (e, _req, res, ...args) => sendErrorF(e, res.send, ...args)))
+app.get('/home',(req,res) =>{
+
+    console.log('cookies', req.cookies)
+    res.send('hello home' + JSON.stringify(req.cookies))
+})
+app.get('/history/sample/raw', (_req, res) => res.sendfile(__dirname + '/public/samplehistory.json'))
 app.get('/history/sample/table', (_, res) => {
     fs.readFile(__dirname + '/public/samplehistory.json', 'utf8', (err, raw) => {
         if (err != null) return sendErrorF(res)(err)
@@ -53,7 +81,7 @@ app.get('/history/sample/table', (_, res) => {
             if (err != null) return sendErrorF(res)(err)
             const replaced =
                 html
-                    .replace("data = null",'data = ' + raw)
+                    .replace("data = null", 'data = ' + raw)
             res.send(replaced)
         }
         )

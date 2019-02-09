@@ -2,19 +2,19 @@ const querystring = require('querystring')
 const request = require('request')
 
 const clientId = process.env.clientid || 'SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz'
-const getAuthority = (host,port) =>'http://' + host + (port != 80 && host.indexOf(':') <0 ? ':' + port : '')
-exports.getAuthUrl= (host,port,relRedirect) =>
-            'https://login.uber.com/oauth/v2/authorize?response_type=code'
-                + '&client_id=' + clientId
-                + '&scope=history+history_lite+profile'
-                + '&redirect_uri=' + getAuthority(host,port) + relRedirect // http://localhost:3000'
-exports.getBearer = (clientSecret, code, host, port, fBearer, fErr) => {
+const getAuthority = host => 'http://' + host
+exports.getAuthUrl = (host, relRedirect) =>
+    'https://login.uber.com/oauth/v2/authorize?response_type=code'
+    + '&client_id=' + clientId
+    + '&scope=history+history_lite+profile'
+    + '&redirect_uri=' + getAuthority(host) + relRedirect // http://localhost:3000'
+exports.getBearer = (clientSecret, code, host, fBearer, fErr) => {
     const form = {
         client_id: clientId,
         client_secret: clientSecret,
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: 'http://' + host + (port != 80 ? ':' + port : '')
+        redirect_uri: getAuthority(host)
     }
     const formData = querystring.stringify(form)
     // reference: https://stackoverflow.com/questions/17121846/node-js-how-to-send-headers-with-form-data-using-request-module
@@ -72,8 +72,8 @@ exports.getMe = (bearer, f, fErr) => {
         console.log('me', me)
         // any schema validation goes here
         var isFullProfile = me.rider_id && Object.keys(me).indexOf('mobile_verified') >= 0;
-        if(!isFullProfile) console.error('scope request does not include profile')
-        return f.call(me,isFullProfile)
+        if (!isFullProfile) console.error('scope request does not include profile')
+        return f.call(me, isFullProfile)
     }, fErr)
 
 }
