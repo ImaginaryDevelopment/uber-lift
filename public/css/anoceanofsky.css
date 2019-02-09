@@ -3,12 +3,29 @@ Design by Bryant Smith
 http://www.bryantsmith.com
 Free use with link
 */
+/*
+branding source: https://studio.tailorbrands.com/business/28308653/wizard/logos/172550204?selectedBrandVersionId=1672353136
+*/
 html{
     background-color: #014D5D
+}
+#watermark
+{
+ position: absolute;
+ top:0px;
+ left:0px;
+ opacity:0.05;
+ z-index:95;
+ color:white;
+ background-image: url(images/trans.png);
+ background-repeat: no-repeat;
+ min-height: 100%;
+ min-width: 100%;
 }
 body {
     margin: 0;
     padding: 0;
+    z-index: 99;
     text-align: left;
     font-family: "Adobe Garamond Pro Bold", Georgia, "Times New Roman", Times, serif;
     font-size: 13px;
