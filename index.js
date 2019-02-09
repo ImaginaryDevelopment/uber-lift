@@ -75,11 +75,11 @@ const homeHandler = (req, res) => {
         })
     })
 }
+app.get('/', indexHandler)
 app.use(express.static('client'))
 app.use(express.static('public', ['html', 'htm', 'json']))
 app.get('*', (req,_,next) => {console.log('Request for ' + req.url); next()})
 app.get('/hello', (_req, res) => res.send('Hello World!'))
-app.get('/', indexHandler)
 app.get('/home', homeHandler)
 app.get('/history/sample/raw', (_req, res) => res.sendfile(__dirname + '/public/samplehistory.json'))
 app.get('/history/sample/table', (_, res) => {
