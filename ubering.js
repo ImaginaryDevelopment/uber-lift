@@ -40,7 +40,7 @@ exports.getFromUber = (bearer, uri, f) => {
         headers: { Authorization: 'Bearer ' + bearer },
         uri,
         method: 'GET'
-    }, (err, res, body) => {
+    }, (err, _res, body) => {
         if (err != null) {
             console.error(JSON.stringify(err))
             throw ('getFromUber body:' + body)
@@ -56,7 +56,7 @@ exports.getHistory = (bearer, fHistory) => {
         headers: { Authorization: 'Bearer ' + bearer },
         uri: 'https://api.uber.com/v1.2/history',
         method: 'GET'
-    }, (err, res, body) => {
+    }, (err, _res, body) => {
         if (err != null) {
             var e = JSON.stringify(err)
             console.error(e)

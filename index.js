@@ -41,11 +41,11 @@ const indexHandler = (req, res) => {
 const getTableHtml = (me, history, f) =>
     readFile('/public/table.html',
         html => {
-            // console.log('we have a table')
+            console.log('we have a table')
             const data = JSON.stringify(history)
             const pro = JSON.stringify(me)
             const output = html.replace("data = null", 'data = ' + data).replace("me = null", 'me = ' + pro)
-            // console.log('we have html',me,history,html,f)
+            console.log('we have html',output)
             return f(output)
         }
     )
@@ -67,12 +67,15 @@ app.get('/home', homeHandler)
 app.get('/history/sample/raw', (_req, res) => res.sendfile(__dirname + '/public/samplehistory.json'))
 app.get('/history/sample/table', (_, res) => {
     readFile('/public/sampleuser.json', me =>
-        readFile('/public/samplehistory.json', history =>
-            getTableHtml(me, history, res.send)
+        readFile('/public/samplehistory.json', history =>{
+            // necessary https://stackoverflow.com/questions/41801723/express-js-cannot-read-property-req-of-undefined
+            const send = x => res.send(x)
+            getTableHtml(JSON.parse(me), JSON.parse(history), send)
+        }
         )
     )
 })
-app.get('/markers', (req, res) => res.sendFile(__dirname + '/public/markers.html'))
+app.get('/markers', (_req, res) => res.sendFile(__dirname + '/public/markers.html'))
 app.use(express.static('client'))
 app.use(express.static('public', ['html', 'htm', 'json']))
 // express error-handling: https://expressjs.com/en/guide/error-handling.html
