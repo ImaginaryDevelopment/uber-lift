@@ -7,26 +7,28 @@
         console.log(context);
         if (context.body == null)
             return <div>Hello React!</div>;
-        else
+        else {
             return <div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Start</th>
-                    </tr>
-                </thead>
-                <tbody>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Start</th>
+                            <th>Display</th>
+                        </tr>
+                    </thead>
+                    <tbody>
 
-                {data.history.map(function (hi) {
+                        {data.history.map(function (hi) {
                 return <tr>
-                            <td>{new Date(hi.start_time).toLocaleDateString()}</td>
-                            <td>{hi.start_city.display_name}</td>
-                        </tr>;
+                                    <td>{new Date(hi.start_time).toLocaleDateString()}</td>
+                                    <td>{hi.start_city.display_name}</td>
+                                </tr>;
             })}
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
 
-        </div>;
+            </div>;
+        }
     };
     ReactDOM.render(<HistoryTable data={context.data}/>, document.getElementById('body'));
 })(findJsParent());

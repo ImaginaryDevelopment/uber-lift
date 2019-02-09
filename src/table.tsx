@@ -34,6 +34,7 @@ interface HistoryData {
                     <thead>
                         <tr>
                             <th>Start</th>
+                            <th>Display</th>
                         </tr>
                     </thead>
                     <tbody>
