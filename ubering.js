@@ -2,7 +2,7 @@ const querystring = require('querystring')
 const request = require('request')
 
 const clientId = process.env.clientid || 'SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz'
-exports.getBearer = (clientSecret, code, host, port, fBearer, fError) => {
+exports.getBearer = (clientSecret, code, host, port, fBearer, fErr) => {
     const form = {
         client_id: clientId,
         client_secret: clientSecret,
@@ -21,15 +21,15 @@ exports.getBearer = (clientSecret, code, host, port, fBearer, fError) => {
         console.log('yay response?' + typeof body)
         const jBody = JSON.parse(body);
         if (jBody.error) {
-            fError()
+            fErr()
         } else if (jBody.access_token) {
             fBearer(jBody.access_token);
         }
     })
 }
-exports.getFromUber = (bearer, uri, f, fError) => {
+exports.getFromUber = (bearer, uri, f, fErr) => {
     if (bearer == null)
-        return fError('no bearer for uri ' + uri)
+        return fErr('no bearer for uri ' + uri)
     request({
         headers: { Authorization: 'Bearer ' + bearer },
         uri,
@@ -37,16 +37,14 @@ exports.getFromUber = (bearer, uri, f, fError) => {
     }, (err, res, body) => {
         if (err != null) {
             console.error(JSON.stringify(err))
-            return fError(err, res, body)
+            return fErr(err, res, body)
         }
-        if (body == null) return fError({ err, res, body })
+        if (body == null) return fErr({ err, res, body })
         const jBody = JSON.parse(body)
         f(jBody)
-    }
-    )
-
+    })
 }
-exports.getHistory = (bearer, fHistory, fError) => {
+exports.getHistory = (bearer, fHistory, fErr) => {
     request({
         headers: { Authorization: 'Bearer ' + bearer },
         uri: 'https://api.uber.com/v1.2/history',
@@ -54,14 +52,19 @@ exports.getHistory = (bearer, fHistory, fError) => {
     }, (err, res, body) => {
         if (err != null) {
             console.error(JSON.stringify(err))
-            return fError(err, res, body)
+            return fErr(err, res, body)
         }
-        if (body == null) return fError({ err, res, body })
+        if (body == null) return fErr({ err, res, body })
         const jBody = JSON.parse(body)
         fHistory(jBody)
-        // res.send(body)
+    })
 
-    }
-    )
+}
+exports.getMe = (bearer,f,fErr) =>{
+    exports.getFromUber(bearer,'https://api.uber.com/v1.2/me',(...theArgs) =>{
+        // any schema validation goes here
+        // ... none at this time
+        return f.call(theArgs)
+    },fErr)
 
 }
