@@ -9,6 +9,18 @@ branding source: https://studio.tailorbrands.com/business/28308653/wizard/logos/
 html{
     background-color: #014D5D
 }
+#logo{
+    position: relative;
+    clear:both;
+    float:right;
+    background-image:url(images/initials.png);
+    background-repeat: no-repeat;
+    right:20px;
+    top:-2px;
+    min-width: 100px;
+    min-height: 400px;
+
+}
 #watermark /* https://stackoverflow.com/questions/21458162/creating-watermark-using-html-and-css */
 {
  position: absolute;
