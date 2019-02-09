@@ -31,7 +31,12 @@ const indexHandler = (req, res) => {
         // https://login.uber.com/oauth/v2/authorize?response_type=code&client_id=SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz&scope=history+history_lite+profile&redirect_uri=http://localhost:3000
         readFile('/public/index.html', html => {
             console.log('indexing', req.headers.host)
-            res.send(html.replace('@authUrl', ubering.getAuthUrl(req.protocol, req.headers.host, '')))
+            readFile('/public/menu.html', menuHtml => {
+                res.send(
+                    html
+                        .replace('@nav', menuHtml)
+                        .replace('@authUrl', ubering.getAuthUrl(req.protocol, req.headers.host, '')))
+            })
         })
     } else {
         console.log('ubering!')
@@ -44,12 +49,17 @@ const indexHandler = (req, res) => {
 }
 const getTableHtml = (me, history, f) =>
     readFile('/public/table.html',
-        html => {
-            const data = JSON.stringify(history)
-            const pro = JSON.stringify(me)
-            const output = html.replace("data = null", 'data = ' + data).replace("me = null", 'me = ' + pro)
-            return f(output)
-        }
+        html =>
+            readFile('/public/menu.html', menuHtml => {
+                const data = JSON.stringify(history)
+                const pro = JSON.stringify(me)
+                const output =
+                    html
+                        .replace('@nav', menuHtml)
+                        .replace("data = null", 'data = ' + data)
+                        .replace("me = null", 'me = ' + pro)
+                return f(output)
+            })
     )
 
 const homeHandler = (req, res) => {
@@ -78,7 +88,7 @@ const homeHandler = (req, res) => {
 app.get('/', indexHandler)
 app.use(express.static('client'))
 app.use(express.static('public', ['html', 'htm', 'json']))
-app.get('*', (req,_,next) => {console.log('Request for ' + req.url); next()})
+app.get('*', (req, _, next) => { console.log('Request for ' + req.url); next() })
 app.get('/hello', (_req, res) => res.send('Hello World!'))
 app.get('/home', homeHandler)
 app.get('/history/sample/raw', (_req, res) => res.sendfile(__dirname + '/public/samplehistory.json'))
