@@ -47,9 +47,9 @@ const indexHandler = (req, res) => {
 };
 const homeHandler = (req, res) => {
     if (req.cookies == null || req.cookies.bearer == null) return res.redirect('/')
-    ubering.getMe(bearer, (me, _isFull) => {
+    ubering.getMe(req.cookies.bearer, (me, _isFull) => {
         ubering.getHistory(req.cookies.bearer, history => {
-            res.send(me + '\r\n' + history)
+            res.send(util.inspect(me) + '\r\n' + util.inspect(history))
         })
     })
 }
