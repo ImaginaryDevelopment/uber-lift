@@ -22,6 +22,17 @@ interface HistoryData {
     offset: number
     history: HistoryItem[]
 }
+type Uri = string
+interface Profile {
+    picture: Uri
+    first_name: string
+    last_name: string
+    promo_code: string
+    rider_id: string
+    email: string
+    mobile_verified: boolean
+    uuid: string
+}
 
 (function (context) {
     const HistoryTable = ({ data }: { data: HistoryData }) => {
@@ -38,10 +49,9 @@ interface HistoryData {
                         </tr>
                     </thead>
                     <tbody>
-
                         {
                             data.history.map(hi =>
-                                <tr>
+                                <tr key={hi.request_id}>
                                     <td>{new Date(hi.start_time).toLocaleDateString()}</td>
                                     <td>{hi.start_city.display_name}</td>
                                 </tr>
@@ -53,8 +63,26 @@ interface HistoryData {
             </div>);
         }
     }
+    const ProfileDisplay = ({ me }: { me: Profile }) => {
+        console.log('me', me)
+        if (me == null) return <div />
+        return (<div>
+            {me.last_name}, {me.first_name}
+        </div>)
+    }
+    const TableDisplay = ({ me, data }: { me: Profile, data: HistoryData },...rest : any[]) => {
+        console.log('tableDisplay',me,data,rest)
+        return (
+            <div>
+                <ProfileDisplay me={me} />
+                <HistoryTable data={data} />
+            </div>
+        )
+    }
 
     ReactDOM.render(
-        <HistoryTable data={context.data} />, document.getElementById('body')
+        // <HistoryTable data={context.data} />,
+        <TableDisplay data={context.data} me={context.me} />,
+        document.getElementById('body')
     )
 })(findJsParent())
