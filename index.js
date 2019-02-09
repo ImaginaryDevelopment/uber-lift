@@ -12,20 +12,15 @@ const port = process.env.PORT || 3000;
 const app = express()
 app.use(cookieParser())
 
-const err = e =>{throw ('Error:' + JSON.stringify(e))}
+const err = e => { throw ('Error:' + JSON.stringify(e)) }
 const readFile = (relPath, fText, fErr) => fs.readFile(__dirname + relPath, 'utf8', (err, text) => {
     if (err != null) return fErr(err)
     fText(text)
 })
 
 const indexHandler = (req, res) => {
-    if (req.cookies != null) {
-        if (req.cookies.bearer != null)
-            return res.redirect('/home')
-        res.send('Cookies:' + JSON.stringify(req.cookies))
-        // ubering.getHistory(req.cookies('bearer'),() => {}, (err,res2,body) => res.send('Error:' + JSON.stringify({err,res2,body})))
-        return;
-    }
+    if (req.cookies != null && req.cookies.bearer != null) {
+        return res.redirect('/home')}
     // reference: https://stackoverflow.com/questions/6912584/how-to-get-get-query-string-variables-in-express-js-on-node-js
     if (req.query.code == null) {
         // reference: https://stackoverflow.com/questions/26079611/node-js-typeerror-path-must-be-absolute-or-specify-root-to-res-sendfile-failed
@@ -40,16 +35,17 @@ const indexHandler = (req, res) => {
             bearer => {
                 res.cookie('bearer', bearer)
                 res.redirect('/home')
-            },
-            sendError
-        )
+            })
     }
 };
 const homeHandler = (req, res) => {
     if (req.cookies == null || req.cookies.bearer == null) return res.redirect('/')
     ubering.getMe(req.cookies.bearer, (me, _isFull) => {
         ubering.getHistory(req.cookies.bearer, history => {
-            res.send(util.inspect(me) + '\r\n' + util.inspect(history))
+            // res.send(util.inspect(me) + '\r\n' + util.inspect(history))
+            readFile('/public/table.html', html => {
+                res.send(html.replace("body = null", history).replace("me = null", me))
+            })
         })
     })
 }
@@ -75,9 +71,9 @@ app.get('/markers', (req, res) => res.sendFile(__dirname + '/public/markers.html
 app.use(express.static('client'))
 app.use(express.static('public', ['html', 'htm', 'json']))
 // express error-handling: https://expressjs.com/en/guide/error-handling.html
-app.use(function (err,req,res,next){
+app.use(function (err, req, res, next) {
     console.error(err.stack)
     // log this to database in prod, not to customer
-    res.status(500).send('Error:' + util.inspect({err,req,res,next}))
+    res.status(500).send('Error:' + util.inspect({ err, req, res, next }))
 })
 app.listen(port, () => console.log("Example app listening on port " + port))
