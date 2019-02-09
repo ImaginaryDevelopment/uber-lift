@@ -36,6 +36,7 @@ exports.getBearer = (clientSecret, code, protocol, host, fBearer) => {
 exports.getFromUber = (bearer, uri, f) => {
     if (bearer == null)
         throw ('no bearer for uri ' + uri)
+    console.log("fetching" + uri)
     request({
         headers: { Authorization: 'Bearer ' + bearer },
         uri,
