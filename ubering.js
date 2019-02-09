@@ -38,10 +38,10 @@ exports.getHistory = (bearer,fHistory, fError) => {
             console.error(JSON.stringify(err))
             return fError(err,res,body)
         }
-        if(body == null) return fError(err,res,body)
-        // const jBody = JSON.parse(body)
-        // fHistory(jBody)
-        res.send(body)
+        if(body == null) return fError({err,res,body})
+        const jBody = JSON.parse(body)
+        fHistory(jBody)
+        // res.send(body)
 
     }
     )
