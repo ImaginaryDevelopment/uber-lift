@@ -52,19 +52,14 @@ interface Profile {
             if(data.history.length == 0){
                 new google.maps.Marker({ position: { lat: 37.774900, lng: -122.419400 }, map: map, title: 'San Francisco' });
                 new google.maps.Marker({ position: { lat: 30.251183, lng: -81.590179 }, map: map, title: 'Xpress' });
+                new google.maps.Marker({position:{lat:30.32389185,lng:-81.3956847}, map:map, title: 'SourceFuse'});
+
             }
             data.history
                 .map(x =>{
                 new google.maps.Marker({position:{lat:x.start_city.latitude,lng:x.start_city.longitude},map:map,title:x.start_city.display_name})
 
             })
-            if (mapElement != null) {
-                console.log('removing style!')
-                context.attr = mapElement.attributes;
-                console.log(Object.keys(mapElement.attributes))
-                // setTimeout(() => mapElement!.removeAttribute('style'),1000)
-            }
-            else console.log('map not found')
         }
         if (!context.appendedMap) {
             const script = document.createElement("script")

@@ -3,37 +3,44 @@ Design by Bryant Smith
 http://www.bryantsmith.com
 Free use with link
 */
+
 /*
 branding source: https://studio.tailorbrands.com/business/28308653/wizard/logos/172550204?selectedBrandVersionId=1672353136
 */
-html{
+
+html {
     background-color: #014D5D
 }
-#logo{
+
+#logo {
     position: relative;
-    clear:both;
-    float:right;
-    background-image:url(images/initials.png);
+    clear: both;
+    float: right;
+    background-image: url(images/initials.png);
     background-repeat: no-repeat;
-    right:20px;
-    top:-2px;
+    right: 20px;
+    top: -2px;
     min-width: 100px;
     min-height: 400px;
+}
 
+#watermark
+/* https://stackoverflow.com/questions/21458162/creating-watermark-using-html-and-css */
+
+    {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    opacity: 0.05;
+    z-index: 95;
+    color: white;
+    background-image: url(images/trans.png);
+    background-repeat: no-repeat;
+    min-height: 100%;
+    min-width: 100%;
+    pointer-events: none;
 }
-#watermark /* https://stackoverflow.com/questions/21458162/creating-watermark-using-html-and-css */
-{
- position: absolute;
- top:0px;
- left:0px;
- opacity:0.05;
- z-index:95;
- color:white;
- background-image: url(images/trans.png);
- background-repeat: no-repeat;
- min-height: 100%;
- min-width: 100%;
-}
+
 body {
     margin: 0;
     padding: 0;
@@ -43,7 +50,7 @@ body {
     font-size: 13px;
     color: #061C37;
     /* https://www.w3schools.com/css/css3_gradients.asp */
-    background-image: linear-gradient(#073BA1,#014D5D);
+    background-image: linear-gradient(#073BA1, #014D5D);
     background: #014D5D url(images/background.png);
     background-repeat: repeat-x;
 }
@@ -59,11 +66,12 @@ body {
     overflow: hidden;
     width: 670px;
 }
-ul.nav{
 
+ul.nav {
     border-radius: 25px;
 }
-ul.nav li{
+
+ul.nav li {
     text-align: center;
     position: relative;
     /* margin-top: 30px; */
@@ -82,12 +90,15 @@ ul.nav li a {
     text-decoration: none;
     color: #CDE2FC;
 }
-ul.nav li ul{
+
+ul.nav li ul {
     display: none;
 }
-ul.nav li:hover ul{
+
+ul.nav li:hover ul {
     display: inline;
 }
+
 ul.nav a:hover {
     color: #0C61C9;
     display: block;
@@ -186,32 +197,34 @@ ul.nav a:hover {
     color: #386172;
 }
 
-.dropdown{
-    position:relative;
-    display:inline-block;
+.dropdown {
+    position: relative;
+    display: inline-block;
 }
-.dropdown-content{
-    display:none;
-    position:absolute;
+
+.dropdown-content {
+    display: none;
+    position: absolute;
     background-color: black;
     min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
     padding: 12px 16px;
     z-index: 1;
     border-radius: 25px;
 }
-.dropdown:hover .dropdown-content{
-    display:block
+
+.dropdown:hover .dropdown-content {
+    display: block
 }
-#map{
-    clear:both;
+
+#map {
+    clear: both;
     position: absolute;
-    top:400px;
-    left:50px;
+    top: 400px;
+    left: 50px;
     min-width: 30%;
     min-height: 300px;
     max-width: 400px;
     max-height: 400px;
     margin-top: -200px;
-
 }
