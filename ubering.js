@@ -2,7 +2,7 @@ const querystring = require('querystring')
 const request = require('request')
 
 const clientId = process.env.clientid || 'SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz'
-const getAuthority = (protocol, host) => (host == uber-lift.herokuapp.com ? 'https' : protocol) + '://' + host
+const getAuthority = (protocol, host) => (host == 'uber-lift.herokuapp.com' ? 'https' : protocol) + '://' + host
 exports.getAuthUrl = (protocol, host, relRedirect) =>
     'https://login.uber.com/oauth/v2/authorize?response_type=code'
     + '&client_id=' + clientId
