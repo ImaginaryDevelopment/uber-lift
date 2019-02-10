@@ -161,6 +161,20 @@ export module Histories {
             if(findOneResult&&findOneResult.then)
                 console.error('findOneResult is a promise')
             const dbHistory = await findOneResult
+            if(dbHistory != null){
+                console.log('updating history')
+                Object.keys(history).map(k => dbHistory[k] = history[k])
+                dbHistory.save((err:any,documentHistory:HistoryData,numRows:number)=>
+                    console.log('updated history',documentHistory)
+                )
+
+            } else {
+                console.log('inserting history')
+                const x = new m.M(history)
+                x.save((err:any,documentHistory:HistoryData,numRows:number)=>
+                    console.log('inserted history',documentHistory)
+                )
+            }
             console.log('done waiting for saveHistory findOne')
             await f(history)
         })
