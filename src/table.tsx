@@ -33,9 +33,14 @@ interface UberProfile {
     mobile_verified: boolean
     uuid: string
 }
-
 (function (context) {
-    var Ajax: RComponent<AjaxProps<any>> = context.Ajax;
+    let bindAllTheThings = function (this: React.Component<any, any>, prototype: object) {
+        Object.getOwnPropertyNames(prototype).filter(x => x != "constructor").map(x => {
+            if (typeof ((this as any)[x]) === "function") {
+                (this as any)[x] = (this as any)[x].bind(this);
+            }
+        });
+    }
     context.appendedMap = false;
     const Marker = ({ data }: { data: HistoryData }) => {
         if (data == null || data.history == null)
@@ -110,7 +115,7 @@ interface UberProfile {
     interface TableDisplayState {
         data: HistoryData | undefined
         ajaxing: boolean
-        lastRefresh:Date | undefined
+        lastRefresh: Date | undefined
     }
     interface TableDisplayProps {
         me: UberProfile | undefined
@@ -119,11 +124,11 @@ interface UberProfile {
     class TableDisplay extends React.Component<TableDisplayProps, TableDisplayState> {
         constructor(props: TableDisplayProps) {
             super(props);
-            context.bindAllTheThings.call(this, TableDisplay.prototype);
+            bindAllTheThings.call(this, TableDisplay.prototype);
             this.state = this.getDefaultState();
         }
         getDefaultState(): TableDisplayState {
-            return { data: this.props.data, ajaxing: false, lastRefresh:undefined }
+            return { data: this.props.data, ajaxing: false, lastRefresh: undefined }
         }
         renderRefresh(data: HistoryData) {
             console.log('refresh loading', data)
@@ -133,26 +138,22 @@ interface UberProfile {
             console.log('refreshing')
             this.setState({ ajaxing: true })
         }
-        componentWillMount(){
+        componentWillMount() {
             console.log('did mount')
         }
         render() {
             console.log("rendering")
-            if(this.state.ajaxing){
+            if (this.state.ajaxing) {
                 console.log('fetching!', context.historyUrl)
                 context.fetch(context.historyUrl)
-                    .then((response:any) => {console.log('resp',response); return response.json()})
+                    .then((response: any) => { console.log('resp', response); return response.json() })
                     .then(this.renderRefresh)
             }
             var middleWhere: JSX.Element | undefined;
             if (!this.state.ajaxing && context.historyUrl != null)
-                middleWhere = (<button title={this.state.lastRefresh != null? this.state.lastRefresh.toLocaleTimeString() : 'Not refreshed'} onClick={this.refresh.bind(this)}>Refresh</button>)
+                middleWhere = (<button title={this.state.lastRefresh != null ? this.state.lastRefresh.toLocaleTimeString() : 'Not refreshed'} onClick={this.refresh.bind(this)}>Refresh</button>)
             else if (context.historyUrl != null && this.state.ajaxing)
                 middleWhere = <button disabled={true}>Refresh</button>
-                    // (<Ajax title="fetching"
-                    //     getUrl={context.historyUrl}
-                    //     renderData={ajaxData => { this.renderRefresh(ajaxData); return <div />; }}
-                    // />)
             else <div>History refresh unavailable</div>
             console.log('done creating where')
             return (

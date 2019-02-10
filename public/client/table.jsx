@@ -15,7 +15,14 @@ var __extends = (this && this.__extends) || (function () {
 /// <reference path="../node_modules/@types/react/index.d.ts" />
 /// <reference types="react" />
 (function (context) {
-    var Ajax = context.Ajax;
+    var bindAllTheThings = function (prototype) {
+        var _this = this;
+        Object.getOwnPropertyNames(prototype).filter(function (x) { return x != "constructor"; }).map(function (x) {
+            if (typeof (_this[x]) === "function") {
+                _this[x] = _this[x].bind(_this);
+            }
+        });
+    };
     context.appendedMap = false;
     var Marker = function (_a) {
         var data = _a.data;
@@ -88,7 +95,7 @@ var __extends = (this && this.__extends) || (function () {
         __extends(TableDisplay, _super);
         function TableDisplay(props) {
             var _this = _super.call(this, props) || this;
-            context.bindAllTheThings.call(_this, TableDisplay.prototype);
+            bindAllTheThings.call(_this, TableDisplay.prototype);
             _this.state = _this.getDefaultState();
             return _this;
         }
@@ -119,10 +126,6 @@ var __extends = (this && this.__extends) || (function () {
                 middleWhere = (<button title={this.state.lastRefresh != null ? this.state.lastRefresh.toLocaleTimeString() : 'Not refreshed'} onClick={this.refresh.bind(this)}>Refresh</button>);
             else if (context.historyUrl != null && this.state.ajaxing)
                 middleWhere = <button disabled={true}>Refresh</button>;
-            // (<Ajax title="fetching"
-            //     getUrl={context.historyUrl}
-            //     renderData={ajaxData => { this.renderRefresh(ajaxData); return <div />; }}
-            // />)
             else
                 <div>History refresh unavailable</div>;
             console.log('done creating where');
