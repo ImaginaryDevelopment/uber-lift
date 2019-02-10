@@ -13,10 +13,23 @@ const port = process.env.PORT || 3000;
 const app = express()
 app.use(cookieParser())
 
-const readFile = (relPath, fText) => fs.readFile(__dirname + relPath, 'utf8', (err, text) => {
-    if (err != null) throw err
-    return fText(text)
-})
+const readFile = relPath =>
+    new Promise((resolve,reject) =>
+        fs.readFile(__dirname + relPath, 'utf8', (err, text) =>
+            err!= null? reject(err) : resolve(text)
+))
+
+const errorHandler = (err, req,res,_next, ...rest) =>{
+    if(!res || !res.status || !res.send)
+        throw {Message:'Inappropriate errorHandler call', err}
+    if(err && err.stack && req && res){
+        console.error(err.stack)
+        // log this to database in prod, not to customer
+        return res.status(500).send('Error:' + util.inspect({ err, req, res}))
+    }
+    return res.status(500).send('Error' + util.inspect({err,req,...rest}))
+}
+
 const helloDbHandler = (req, res) => {
     dal.storeKitten()
     res.send('yay db!')
@@ -25,19 +38,16 @@ const indexHandler = (req, res) => {
     if (req.cookies != null && req.cookies.bearer != null) {
         return res.redirect('/home')
     }
-    // reference: https://stackoverflow.com/questions/6912584/how-to-get-get-query-string-variables-in-express-js-on-node-js
     if (req.query.code == null) {
-        // reference: https://stackoverflow.com/questions/26079611/node-js-typeerror-path-must-be-absolute-or-specify-root-to-res-sendfile-failed
-        // https://login.uber.com/oauth/v2/authorize?response_type=code&client_id=SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz&scope=history+history_lite+profile&redirect_uri=http://localhost:3000
-        readFile('/public/index.html', html => {
-            console.log('indexing', req.headers.host)
-            readFile('/public/menu.html', menuHtml => {
+        Promise.all([readFile('/public/index.html'),readFile('/public/menu.html')])
+            .then( ([html,menuHtml]) => {
+                console.log('indexing', req.headers.host)
                 res.send(
                     html
                         .replace('@nav', menuHtml)
                         .replace('@authUrl', ubering.getAuthUrl(req.protocol, req.headers.host, '')))
             })
-        })
+            .catch(e => errorHandler(e,req,res,undefined))
     } else {
         console.log('ubering!')
         ubering.getBearer(clientSecret, req.query.code, req.protocol, req.headers.host,
@@ -50,11 +60,11 @@ const indexHandler = (req, res) => {
 const historyUrl = '/history/refresh'
 
 const getTableHtml = (me, history, f, allowRefresh) =>
-    readFile('/public/table.html',
-        html =>
-            readFile('/public/menu.html', menuHtml => {
+    Promise.all([readFile('/public/table.html'),readFile('/public/menu.html')])
+        .then(([html,menuHtml]) =>{
                 const data = JSON.stringify(history)
                 const pro = JSON.stringify(me)
+                /** @type {string} */
                 const output =
                     html
                         .replace('@nav', menuHtml)
@@ -62,8 +72,7 @@ const getTableHtml = (me, history, f, allowRefresh) =>
                         .replace("me = null", 'me = ' + pro)
                         .replace("historyUrl = null", allowRefresh ? 'historyUrl = \'' + historyUrl + '\'' : 'historyUrl = null')
                 return f(output)
-            })
-    )
+        })
 
 const homeHandler = (req, res) => {
     if (req.cookies == null || req.cookies.bearer == null) return res.redirect('/')
@@ -124,10 +133,5 @@ app.get('/db/profiles', (_req, res) => {
 })
 app.get('/markers', (_req, res) => res.sendFile(__dirname + '/public/markers.html'))
 // express error-handling: https://expressjs.com/en/guide/error-handling.html
-app.use(function (err, req, res, next) {
-    console.log('in error handler')
-    console.error(err.stack)
-    // log this to database in prod, not to customer
-    res.status(500).send('Error:' + util.inspect({ err, req, res, next }))
-})
+app.use(errorHandler)
 app.listen(port, () => console.log("Example app listening on port " + port))
