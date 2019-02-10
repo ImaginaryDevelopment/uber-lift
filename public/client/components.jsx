@@ -124,4 +124,13 @@ var __extends = (this && this.__extends) || (function () {
     };
     Ajax.displayName = 'Ajax';
     exports.Ajax = Ajax;
+    var bindAllTheThings = function (prototype) {
+        var _this = this;
+        Object.getOwnPropertyNames(prototype).filter(function (x) { return x != "constructor"; }).map(function (x) {
+            if (typeof (_this[x]) === "function") {
+                _this[x] = _this[x].bind(_this);
+            }
+        });
+    };
+    exports.bindAllTheThings = bindAllTheThings;
 })(findJsParent());

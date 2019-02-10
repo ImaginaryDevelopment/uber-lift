@@ -47,7 +47,9 @@ const indexHandler = (req, res) => {
             })
     }
 }
-const getTableHtml = (me, history, f) =>
+const historyUrl = '/history/refresh'
+
+const getTableHtml = (me, history, f, allowRefresh) =>
     readFile('/public/table.html',
         html =>
             readFile('/public/menu.html', menuHtml => {
@@ -58,6 +60,7 @@ const getTableHtml = (me, history, f) =>
                         .replace('@nav', menuHtml)
                         .replace("data = null", 'data = ' + data)
                         .replace("me = null", 'me = ' + pro)
+                        .replace("historyUrl = null", allowRefresh ? 'historyUrl = \'' + historyUrl + '\'' : 'historyUrl = null')
                 return f(output)
             })
     )
@@ -74,12 +77,12 @@ const homeHandler = (req, res) => {
                     console.log('history not found in db')
                     ubering.getHistory(bearer, history => {
                         dal.saveHistory(history, () => {
-                            return getTableHtml(me, history, send)
+                            return getTableHtml(me, history, send, true)
                         })
                     })
                 } else {
                     console.log('history found in db')
-                    getTableHtml(me, item, send)
+                    getTableHtml(me, item, send, true)
                 }
             })
         })
@@ -91,6 +94,14 @@ app.use(express.static('public', ['html', 'htm', 'json']))
 app.get('*', (req, _, next) => { console.log('Request for ' + req.url); next() })
 app.get('/hello', (_req, res) => res.send('Hello World!'))
 app.get('/home', homeHandler)
+app.get(historyUrl, (req, res) => {
+    const bearer = req.cookies.bearer
+    if (bearer == null) return res.send('No bearer cookie found')
+    ubering.getHistory(bearer, history => {
+        console.log("refreshing history")
+        res.send(history)
+    })
+})
 app.get('/history/sample/raw', (_req, res) => res.sendfile(__dirname + '/public/samplehistory.json'))
 app.get('/history/sample/table', (_, res) => {
     readFile('/public/sampleuser.json', me =>
