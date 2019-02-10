@@ -7,17 +7,7 @@
 // https://www.typescriptlang.org/docs/handbook/module-resolution.html
 // http://stackoverflow.com/questions/12930049/how-do-i-import-other-typescript-files
 /* testing */
-declare var global:any;
-declare var module:any;
-// declare var window:any;
-type Action = () => void;
-type AnyAction = (...rest:any[]) => void;
-type Action1<T> = (x:T) => void;
-type Action2<T,T2> = (x:T, y:T2) => void;
-type Func<T> = () => T;
-type Func1<T,T2> = (x:T) => T2
 type AddClassesFunction = (defaultClasses?:(string|null)[] , otherClasses?:string|string[]) => string;
-type Uri = string
 
 type DebounceChangeDelegate = (callback:Action, e:any,...args:any[]) => void;
 
@@ -493,7 +483,7 @@ var addImpureExtensions = ():void => {
         });
     })();
 
-    var debounceChange: DebounceChangeDelegate = function(callback: AnyAction, e, ...args){
+    var debounceChange: DebounceChangeDelegate = function(callback: ActionAny, e, ...args){
         if(!exports.isDefined(callback)){
             console.info('no callback for debounceChange', e.target, typeof callback, callback);
             return;

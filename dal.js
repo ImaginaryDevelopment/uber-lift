@@ -1,26 +1,35 @@
-const util = require('util')
-const mongoose = require('mongoose')
-// name -> Model
-const schemas = {
-}
-
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = require("mongoose");
+// import * as mongoose from 'mongoose'
+const mongoose = require('mongoose');
+const util = require('util');
+const schemas = {};
 const getOrCreateSchema = (name, schema) => {
     if (schemas[name]) {
-        console.log('schema ' + name + ' is already created')
-        return schemas[name]
+        console.log('schema ' + name + ' is already created');
+        return schemas[name];
     }
     if (schema == null) {
-        console.log('schema not found and none was provided:' + name)
-        return null
+        console.log('schema not found and none was provided:' + name);
+        return undefined;
     }
     // console.log('model?',name,schema && schema.constructor && schema.constructor.collection && schema.constructor.collection.name)
-    const s = new mongoose.Schema(schema)
-    const M = mongoose.model(name, s)
-    const val = { name, s, M }
-    schemas[name] = val
-    console.log('created schema/model for ' + name)
-    return val
-}
+    const s = new mongoose_1.Schema(schema);
+    const M = mongoose.model(name, s);
+    const val = { name, s, M };
+    schemas[name] = val;
+    console.log('created schema/model for ' + name);
+    return val;
+};
 getOrCreateSchema('Profile', {
     picture: String,
     first_name: String,
@@ -30,108 +39,142 @@ getOrCreateSchema('Profile', {
     email: String,
     mobile_verified: Boolean,
     uuid: String
-})
-getOrCreateSchema('History',{
+});
+getOrCreateSchema('History', {
     uuid: String,
     status: String,
     distance: Number,
     product_id: String,
     start_time: Number,
     start_city: {
-      latitude: Number,
-      display_name: String,
-      longitude: Number
+        latitude: Number,
+        display_name: String,
+        longitude: Number
     }
-})
-
-exports.connect = fConn => {
+});
+const connect = (fConn) => __awaiter(this, void 0, void 0, function* () {
     // returns a promise of a connection
-    mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/test', { useNewUrlParser: true })
-    const db = mongoose.connection
-    db.once('open', () => {
-        fConn(db)
-    })
-}
-
-exports.storeKitten = () => {
-    exports.connect(() => {
-        const Cat = getOrCreateSchema('Cat', { name: String }).M
-        const kitty = new Cat({ name: 'Zildjian' })
-        kitty.save().then(() => console.log('meow'))
-    })
-}
-
-exports.getKittens = fCallMeMaybe => {
-    exports.connect(() => {
-        const Cat = getOrCreateSchema('Cat', { name: String }).M
-        Cat.find((err, kittens) => {
-            if (err) return console.error(err)
-            fCallMeMaybe(kittens)
-        })
-    })
-}
-
-saveOne = (name, schema, props) => f => {
-    const M = getOrCreateSchema(name, schema).M
-    const m = new M(props)
+    const connectResult = mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/test', { useNewUrlParser: true });
+    mongoose.connection.once('open', () => __awaiter(this, void 0, void 0, function* () {
+        console.log('connection is open');
+        const fConnResult = fConn(mongoose.connection);
+        if (fConnResult == null || !fConnResult.then)
+            console.error('fConnResult wasn\'t a promise this time');
+        yield fConnResult;
+    }));
+    yield connectResult;
+    console.log('connect is over');
+});
+var Kittens;
+(function (Kittens) {
+    Kittens.storeKitten = () => {
+        connect(() => __awaiter(this, void 0, void 0, function* () {
+            const Cat = getOrCreateSchema('Cat', { name: String }).M;
+            const kitty = new Cat({ name: 'Zildjian' });
+            kitty.save().then(() => console.log('meow'));
+        }));
+    };
+    Kittens.getKittens = (fCallMeMaybe) => {
+        connect(() => __awaiter(this, void 0, void 0, function* () {
+            const Cat = getOrCreateSchema('Cat', { name: String }).M;
+            Cat.find((err, kittens) => {
+                if (err)
+                    return console.error(err);
+                fCallMeMaybe(kittens);
+            });
+        }));
+    };
+})(Kittens = exports.Kittens || (exports.Kittens = {}));
+const saveOne = (name, schema, props) => (f) => {
+    const M = getOrCreateSchema(name, schema).M;
+    const m = new M(props);
     m.save(function (err, mSaved) {
-        if (err) throw err
-        f(mSaved)
-    })
-}
-find = (name, filter) => f => {
-    const M = getOrCreateSchema(name, schema).M
-    M.find(filter, f)
-}
-getAll = (name, schema) => f => {
-    const M = getOrCreateSchema(name, schema).M
-    M.find({}, name).then(function (users) {
-        f(users)
-    })
-}
-exports.getProfiles = f => {
-    exports.connect(() => {
-        console.log('gettingSchema')
-        const { name, s } = getOrCreateSchema("Profile")
-        console.log('obtained')
-        const fAll = getAll(name, s)
-        console.log('delegate created')
-        fAll(f)
-    })
-}
-exports.getHistory = (uuid, f) => {
-    exports.connect(async () => {
-        const filter = {uuid:uuid}
-        const {name,s} = getOrCreateSchema("History")
-        const fAll = getAll(name,s)
-        fAll(f)
-    })
-}
-exports.saveProfile = (profile, f) => {
-    exports.connect(async () => {
-        console.log('saveProfile:connected')
-        const filter = { uuid: profile.uuid }
-        const m = getOrCreateSchema('Profile')
-        const dbProfile = await m.M.findOne(filter)
-        console.log('saveProfile:awaited?')
-        if (dbProfile != null) {
-            Object.keys(profile).map(k => dbProfile[k] = profile[k])
-            dbProfile.save(function (err, _) {
-                if (err) throw err
-                f(dbProfile)
-            })
-        } else {
-            const x = new m.M(profile)
-            x.save(function (err, _) {
-                if (err) throw err
-                f(x)
-            })
-        }
-    })
-}
+        if (err)
+            throw err;
+        f(mSaved);
+    });
+};
+const find = (name, filter) => (f) => {
+    const schemaOpt = schemas[name];
+    if (schemaOpt == null)
+        return f(null);
+    const M = schemaOpt.M;
+    M.find(filter, f);
+};
+const getAll = (name, schema) => (f) => {
+    const M = getOrCreateSchema(name, schema).M;
+    const findPromise = M.find({}, name);
+    findPromise.then((items) => {
+        f(items);
+    });
+};
+var Profiles;
+(function (Profiles) {
+    Profiles.getProfiles = (f) => __awaiter(this, void 0, void 0, function* () {
+        yield connect(() => __awaiter(this, void 0, void 0, function* () {
+            console.log('gettingSchema');
+            const { name, s } = schemas["Profile"];
+            console.log('obtained');
+            const fAll = getAll(name, s);
+            console.log('delegate created');
+            yield fAll(f);
+        }));
+    });
+    Profiles.saveProfile = (profile, f) => __awaiter(this, void 0, void 0, function* () {
+        yield connect(() => __awaiter(this, void 0, void 0, function* () {
+            console.log('saveProfile:connected');
+            const filter = { uuid: profile.uuid };
+            const m = schemas['Profile'];
+            if (m == null)
+                throw 'up profile should be populated';
+            const dbProfile = yield m.M.findOne(filter);
+            console.log('saveProfile:awaited?');
+            if (dbProfile != null) {
+                Object.keys(profile).map((k) => dbProfile[k] = profile[k]);
+                dbProfile.save((err, _) => __awaiter(this, void 0, void 0, function* () {
+                    if (err)
+                        throw err;
+                    yield f(dbProfile);
+                }));
+            }
+            else {
+                const x = new m.M(profile);
+                return x.save(function (err, _) {
+                    if (err)
+                        throw err;
+                    return f(x);
+                });
+            }
+        }));
+    });
+})(Profiles = exports.Profiles || (exports.Profiles = {}));
+var Histories;
+(function (Histories) {
+    Histories.getHistory = (uuid, f) => __awaiter(this, void 0, void 0, function* () {
+        yield connect(() => __awaiter(this, void 0, void 0, function* () {
+            // const filter = { uuid: uuid }
+            const { name, s } = schemas["History"];
+            const fAll = getAll(name, s);
+            console.log('about to fAll');
+            const fAllResult = fAll(f);
+            if (fAllResult && fAllResult.then)
+                console.error('fAllResult was promise');
+        }));
+    });
+    Histories.saveHistory = (uuid, history, f) => __awaiter(this, void 0, void 0, function* () {
+        yield connect(() => __awaiter(this, void 0, void 0, function* () {
+            const filter = { uuid };
+            const m = schemas.History;
+            const findOneResult = m.M.findOne(filter);
+            if (findOneResult && findOneResult.then)
+                console.error('findOneResult is a promise');
+            const dbHistory = yield findOneResult;
+            console.log('done waiting for saveHistory findOne');
+            yield f(history);
+        }));
+    });
+})(Histories = exports.Histories || (exports.Histories = {}));
 // exports.model = (name,schema) => f =>{
 //     const s = new mongoose.Schema(schema)
 //     const M = mongoose.model(name,s)
-
-
 // }

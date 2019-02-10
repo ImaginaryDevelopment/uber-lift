@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "@types/react": "^16.8.2",
     "bulma": "^0.7.4",
     "cookie-parser": "^1.4.3",
     "express": "^4.16.4",
@@ -13,11 +12,17 @@
     "typescript": "^3.3.3"
   },
   "devDependencies": {
+    "@types/express": "github:types/npm-express",
+    "@types/mongoose": "^5.3.12",
+    "@types/node": "^10.12.24",
+    "@types/react": "^16.8.2",
     "@types/react-dom": "^16.8.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "tsc": "tsc"
+    "tsc": "tsc --p tsconfig.server.json && tsc --p tsconfig.client.json",
+    "watchsrc": "node watchsrc.js",
+    "start": "node index.js"
   },
   "author": "",
   "license": "ISC"
