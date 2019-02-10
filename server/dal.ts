@@ -1,5 +1,7 @@
 import { Schema, Model, SchemaDefinition, Document } from 'mongoose'
-import * as mongoose from 'mongoose'
+// import * as mongoose from 'mongoose'
+const mongoose = require('mongoose')
+import {Connection} from 'mongoose'
 const util = require('util')
 
 // name -> Model
@@ -48,17 +50,22 @@ getOrCreateSchema('History', {
     }
 })
 
-const connect = (fConn:Action1<mongoose.Connection>) => {
+const connect = async (fConn:Func1<Connection,Promise<void>>) => {
     // returns a promise of a connection
-    mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/test', { useNewUrlParser: true })
-    const db = mongoose.connection
-    db.once('open', () => {
-        fConn(db)
+    const connectResult:Promise<any> = mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/test', { useNewUrlParser: true })
+    mongoose.connection.once('open', async () => {
+        console.log('connection is open')
+        const fConnResult = fConn(mongoose.connection)
+        if(fConnResult == null || !fConnResult.then)
+        console.error('fConnResult wasn\'t a promise this time')
+        await fConnResult
     })
+    await connectResult
+    console.log('connect is over')
 }
 export module Kittens {
     export const storeKitten = () => {
-        connect(() => {
+        connect(async () => {
             const Cat = getOrCreateSchema('Cat', { name: String })!.M
             const kitty = new Cat({ name: 'Zildjian' })
             kitty.save().then(() => console.log('meow'))
@@ -66,7 +73,7 @@ export module Kittens {
     }
 
     export const getKittens = (fCallMeMaybe:Action1<Document[]>) => {
-        connect(() => {
+        connect(async () => {
             const Cat = getOrCreateSchema('Cat', { name: String })!.M
             Cat.find((err, kittens) => {
                 if (err) return console.error(err)
@@ -100,18 +107,18 @@ const getAll = <T extends Document>(name: string, schema: SchemaDefinition) => (
     })
 }
 export module Profiles {
-    export const getProfiles = (f: Action1<UberProfile[]>) => {
-        connect(() => {
+    export const getProfiles = async (f: Func1<UberProfile[],Promise<void>>) => {
+        await connect(async () => {
             console.log('gettingSchema')
             const { name, s } = schemas["Profile"]!
             console.log('obtained')
             const fAll:Action1<Action1<UberProfile[]>>= getAll(name, s)
             console.log('delegate created')
-            fAll(f)
+            await fAll(f)
         })
     }
-    export const saveProfile = (profile:UberProfile, f:Action1<UberProfile>) => {
-        connect(async () => {
+    export const saveProfile = async (profile:UberProfile, f:Func1<UberProfile,Promise<void>>) => {
+        await connect(async () => {
             console.log('saveProfile:connected')
             const filter = { uuid: profile.uuid }
             const m = schemas['Profile']
@@ -120,34 +127,42 @@ export module Profiles {
             console.log('saveProfile:awaited?')
             if (dbProfile != null) {
                 Object.keys(profile).map((k:keyof UberProfile) => dbProfile[k] = profile[k])
-                dbProfile.save(function (err:any, _:any) {
+                dbProfile.save(async (err:any, _:any) => {
                     if (err) throw err
-                    f(dbProfile)
+                    await f(dbProfile)
                 })
             } else {
                 const x = new m.M(profile)
-                x.save(function (err:any, _:any) {
+                return x.save(function (err:any, _:any) {
                     if (err) throw err
-                    f(x)
+                    return f(x)
                 })
             }
         })
     }
 }
 export module Histories {
-    export const getHistory = (uuid:UberUserIdentifier, f:ActionAny) => {
-        connect(() => {
+    export const getHistory = async (uuid:UberUserIdentifier, f:Func1<any,Promise<void>>) => {
+        await connect(async () => {
             // const filter = { uuid: uuid }
             const { name, s } = schemas["History"]!
             const fAll = getAll(name, s)
-            fAll(f)
+            console.log('about to fAll')
+            const fAllResult:any = fAll(f)
+            if(fAllResult && fAllResult.then)
+                console.error('fAllResult was promise')
         })
     }
-    export const saveHistory = (profile,f) =>{
-        connect(async() =>{
-
-
-
+    export const saveHistory = async (uuid:UberUserIdentifier,history:HistoryData,f:Func1<any,Promise<void>>) =>{
+        await connect(async() =>{
+            const filter ={uuid}
+            const m = schemas.History!
+            const findOneResult:any = m.M.findOne(filter)
+            if(findOneResult&&findOneResult.then)
+                console.error('findOneResult is a promise')
+            const dbHistory = await findOneResult
+            console.log('done waiting for saveHistory findOne')
+            await f(history)
         })
 
 

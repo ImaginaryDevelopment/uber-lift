@@ -83,19 +83,21 @@ const homeHandler:RequestHandler= (req:CookieRequest, res:Response) => {
     // necessary https://stackoverflow.com/questions/41801723/express-js-cannot-read-property-req-of-undefined
     const send = (x: any) => res.send(x)
     const bearer = req.cookies.bearer
-    ubering.getMe(bearer, (me: UberProfile, _isFull: boolean) => {
-        dal.Profiles.saveProfile(me, () => {
-            dal.Histories.getHistory(me.uuid, function (item: HistoryData) {
-                if (item == null) {
+    ubering.getMe(bearer, async (me: UberProfile, _isFull: boolean) => {
+        await dal.Profiles.saveProfile(me, async () => {
+            await dal.Histories.getHistory(me.uuid, async function (item: HistoryData) {
+                console.log('dal.getHistory callback')
+                if (item as any == null || item as any == [] || item.history == null) {
                     console.log('history not found in db')
                     ubering.getHistory(bearer, (history:HistoryData) => {
-                        dal.Histories.saveHistory(history, () => {
-                            return getTableHtml(me, history, send, true)
+                        console.log('ubering.getHistory callback')
+                        dal.Histories.saveHistory(me.uuid,history,async () => {
+                            return await getTableHtml(me, history, send, true)
                         })
                     })
                 } else {
-                    console.log('history found in db')
-                    getTableHtml(me, item, send, true)
+                    console.log('history found in db',util.inspect(item),item)
+                    await getTableHtml(me, item, send, true)
                 }
             })
         })
@@ -132,7 +134,7 @@ app.get('/db/fetch', (_:Request, res:Response) => {
     dal.Kittens.getKittens((k:any) => res.send(k))
 })
 app.get('/db/profiles', (_:Request, res:Response) => {
-    dal.Profiles.getProfiles((profiles:UberProfile[]) => {
+    dal.Profiles.getProfiles(async (profiles:UberProfile[]) => {
         res.send(profiles)
     }
     )

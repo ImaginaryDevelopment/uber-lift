@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -78,24 +86,28 @@ const homeHandler = (req, res) => {
     // necessary https://stackoverflow.com/questions/41801723/express-js-cannot-read-property-req-of-undefined
     const send = (x) => res.send(x);
     const bearer = req.cookies.bearer;
-    ubering.getMe(bearer, (me, _isFull) => {
-        dal.Profiles.saveProfile(me, () => {
-            dal.Histories.getHistory(me.uuid, function (item) {
-                if (item == null) {
-                    console.log('history not found in db');
-                    ubering.getHistory(bearer, (history) => {
-                        dal.Histories.saveHistory(history, () => {
-                            return getTableHtml(me, history, send, true);
+    ubering.getMe(bearer, (me, _isFull) => __awaiter(this, void 0, void 0, function* () {
+        yield dal.Profiles.saveProfile(me, () => __awaiter(this, void 0, void 0, function* () {
+            yield dal.Histories.getHistory(me.uuid, function (item) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    console.log('dal.getHistory callback');
+                    if (item == null || item == [] || item.history == null) {
+                        console.log('history not found in db');
+                        ubering.getHistory(bearer, (history) => {
+                            console.log('ubering.getHistory callback');
+                            dal.Histories.saveHistory(me.uuid, history, () => __awaiter(this, void 0, void 0, function* () {
+                                return yield getTableHtml(me, history, send, true);
+                            }));
                         });
-                    });
-                }
-                else {
-                    console.log('history found in db');
-                    getTableHtml(me, item, send, true);
-                }
+                    }
+                    else {
+                        console.log('history found in db', util.inspect(item), item);
+                        yield getTableHtml(me, item, send, true);
+                    }
+                });
             });
-        });
-    });
+        }));
+    }));
 };
 app.get('/', indexHandler);
 app.use(express.static('client'));
@@ -126,9 +138,9 @@ app.get('/db/fetch', (_, res) => {
     dal.Kittens.getKittens((k) => res.send(k));
 });
 app.get('/db/profiles', (_, res) => {
-    dal.Profiles.getProfiles((profiles) => {
+    dal.Profiles.getProfiles((profiles) => __awaiter(this, void 0, void 0, function* () {
         res.send(profiles);
-    });
+    }));
 });
 app.get('/markers', (_req, res) => res.sendFile(__dirname + '/public/markers.html'));
 // express error-handling: https://expressjs.com/en/guide/error-handling.html
