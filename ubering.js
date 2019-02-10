@@ -1,15 +1,15 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var querystring = require('querystring');
 var request = require('request');
 var clientId = process.env.clientid || 'SbTAG12Fz26uhgNZ6qAxxBTiqabpLKlz';
-var getAuthority = function (protocol, host) { return (host == 'uber-lift.herokuapp.com' ? 'https' : protocol) + '://' + host; };
-var getAuthUrl = function (protocol, host, relRedirect) {
+var getAuthority = function (protocol, host) { return (host == 'uber-lift.herokuapp.com' ? 'https' : protocol) + '://' + (host || 'localhost'); };
+exports.getAuthUrl = function (protocol, host, relRedirect) {
     return 'https://login.uber.com/oauth/v2/authorize?response_type=code'
         + '&client_id=' + clientId
         + '&scope=history+history_lite+profile'
-        + '&redirect_uri=' + getAuthority(protocol, host) + relRedirect;
-}; // http://localhost:3000'
-exports.getAuthUrl = getAuthUrl;
+        + '&redirect_uri=' + getAuthority(protocol, host) + relRedirect; // http://localhost:3000'
+};
 exports.getBearer = function (clientSecret, code, protocol, host, fBearer) {
     var form = {
         client_id: clientId,

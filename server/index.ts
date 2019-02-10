@@ -4,10 +4,11 @@ interface CookieRequest extends Request {
     cookies?: any;
 }
 const express = require('express')
+
 const cookieParser = require('cookie-parser')
-// const https = require('https')
-const ubering = require('./ubering.js')
-const fs = require('fs')
+import * as ubering from './ubering'
+import fs from 'fs'
+
 const clientSecret = process.env.ubersecret
 const util = require('util')
 const dal = require('./dal.js')
