@@ -110,6 +110,7 @@ interface UberProfile {
     interface TableDisplayState {
         data: HistoryData | undefined
         ajaxing: boolean
+        lastRefresh:Date | undefined
     }
     interface TableDisplayProps {
         me: UberProfile | undefined
@@ -122,11 +123,11 @@ interface UberProfile {
             this.state = this.getDefaultState();
         }
         getDefaultState(): TableDisplayState {
-            return { data: this.props.data, ajaxing: false }
+            return { data: this.props.data, ajaxing: false, lastRefresh:undefined }
         }
         renderRefresh(data: HistoryData) {
             console.log('refresh loading', data)
-            this.setState({ data: data, ajaxing: false })
+            this.setState({ data: data, ajaxing: false, lastRefresh: new Date() })
         }
         refresh() {
             console.log('refreshing')
@@ -145,7 +146,7 @@ interface UberProfile {
             }
             var middleWhere: JSX.Element | undefined;
             if (!this.state.ajaxing && context.historyUrl != null)
-                middleWhere = (<button onClick={this.refresh.bind(this)}>Refresh</button>)
+                middleWhere = (<button title={this.state.lastRefresh != null? this.state.lastRefresh.toLocaleTimeString() : 'Not refreshed'} onClick={this.refresh.bind(this)}>Refresh</button>)
             else if (context.historyUrl != null && this.state.ajaxing)
                 middleWhere = <button disabled={true}>Refresh</button>
                     // (<Ajax title="fetching"

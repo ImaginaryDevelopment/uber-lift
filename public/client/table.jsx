@@ -93,11 +93,11 @@ var __extends = (this && this.__extends) || (function () {
             return _this;
         }
         TableDisplay.prototype.getDefaultState = function () {
-            return { data: this.props.data, ajaxing: false };
+            return { data: this.props.data, ajaxing: false, lastRefresh: undefined };
         };
         TableDisplay.prototype.renderRefresh = function (data) {
             console.log('refresh loading', data);
-            this.setState({ data: data, ajaxing: false });
+            this.setState({ data: data, ajaxing: false, lastRefresh: new Date() });
         };
         TableDisplay.prototype.refresh = function () {
             console.log('refreshing');
@@ -116,7 +116,7 @@ var __extends = (this && this.__extends) || (function () {
             }
             var middleWhere;
             if (!this.state.ajaxing && context.historyUrl != null)
-                middleWhere = (<button onClick={this.refresh.bind(this)}>Refresh</button>);
+                middleWhere = (<button title={this.state.lastRefresh != null ? this.state.lastRefresh.toLocaleTimeString() : 'Not refreshed'} onClick={this.refresh.bind(this)}>Refresh</button>);
             else if (context.historyUrl != null && this.state.ajaxing)
                 middleWhere = <button disabled={true}>Refresh</button>;
             // (<Ajax title="fetching"
