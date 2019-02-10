@@ -2,37 +2,6 @@
 /// <reference types="react" />
 declare var findJsParent: () => any;
 declare var google: any;
-interface HistoryCity {
-    latitude: number
-    display_name: string
-    longitude: number
-}
-interface HistoryItem {
-    status: string
-    distance: number
-    product_id: string
-    start_time: number
-    start_city: HistoryCity
-    end_time: number
-    request_id: string
-    request_time: number
-}
-interface HistoryData {
-    count: number
-    limit: number
-    offset: number
-    history: HistoryItem[]
-}
-interface UberProfile {
-    picture: Uri
-    first_name: string
-    last_name: string
-    promo_code: string
-    rider_id: string
-    email: string
-    mobile_verified: boolean
-    uuid: string
-}
 (function (context) {
     let bindAllTheThings = function (this: React.Component<any, any>, prototype: object) {
         Object.getOwnPropertyNames(prototype).filter(x => x != "constructor").map(x => {
