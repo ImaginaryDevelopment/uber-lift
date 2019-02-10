@@ -109,24 +109,55 @@ interface UberProfile {
     }
     interface TableDisplayState {
         data: HistoryData | undefined
+        ajaxing: boolean
     }
     interface TableDisplayProps {
         me: UberProfile | undefined
         data: HistoryData | undefined
     }
-    class TableDisplay extends React.Component<TableDisplayProps,TableDisplayState> {
+    class TableDisplay extends React.Component<TableDisplayProps, TableDisplayState> {
         constructor(props: TableDisplayProps) {
             super(props);
             context.bindAllTheThings.call(this, TableDisplay.prototype);
             this.state = this.getDefaultState();
         }
         getDefaultState(): TableDisplayState {
-            return {data:this.props.data}
+            return { data: this.props.data, ajaxing: false }
+        }
+        renderRefresh(data: HistoryData) {
+            console.log('refresh loading', data)
+            this.setState({ data: data, ajaxing: false })
+        }
+        refresh() {
+            console.log('refreshing')
+            this.setState({ ajaxing: true })
+        }
+        componentWillMount(){
+            console.log('did mount')
         }
         render() {
+            console.log("rendering")
+            if(this.state.ajaxing){
+                console.log('fetching!', context.historyUrl)
+                context.fetch(context.historyUrl)
+                    .then((response:any) => {console.log('resp',response); return response.json()})
+                    .then(this.renderRefresh)
+            }
+            var middleWhere: JSX.Element | undefined;
+            if (!this.state.ajaxing && context.historyUrl != null)
+                middleWhere = (<button onClick={this.refresh.bind(this)}>Refresh</button>)
+            else if (context.historyUrl != null && this.state.ajaxing)
+                middleWhere = <button disabled={true}>Refresh</button>
+                    // (<Ajax title="fetching"
+                    //     getUrl={context.historyUrl}
+                    //     renderData={ajaxData => { this.renderRefresh(ajaxData); return <div />; }}
+                    // />)
+            else <div>History refresh unavailable</div>
+            console.log('done creating where')
             return (
                 <div>
                     <ProfileDisplay me={this.props.me} />
+                    {middleWhere}
                     <HistoryTable data={this.props.data} />
                 </div>
             )

@@ -93,11 +93,42 @@ var __extends = (this && this.__extends) || (function () {
             return _this;
         }
         TableDisplay.prototype.getDefaultState = function () {
-            return { data: this.props.data };
+            return { data: this.props.data, ajaxing: false };
+        };
+        TableDisplay.prototype.renderRefresh = function (data) {
+            console.log('refresh loading', data);
+            this.setState({ data: data, ajaxing: false });
+        };
+        TableDisplay.prototype.refresh = function () {
+            console.log('refreshing');
+            this.setState({ ajaxing: true });
+        };
+        TableDisplay.prototype.componentWillMount = function () {
+            console.log('did mount');
         };
         TableDisplay.prototype.render = function () {
+            console.log("rendering");
+            if (this.state.ajaxing) {
+                console.log('fetching!', context.historyUrl);
+                context.fetch(context.historyUrl)
+                    .then(function (response) { console.log('resp', response); return response.json(); })
+                    .then(this.renderRefresh);
+            }
+            var middleWhere;
+            if (!this.state.ajaxing && context.historyUrl != null)
+                middleWhere = (<button onClick={this.refresh.bind(this)}>Refresh</button>);
+            else if (context.historyUrl != null && this.state.ajaxing)
+                middleWhere = <button disabled={true}>Refresh</button>;
+            // (<Ajax title="fetching"
+            //     getUrl={context.historyUrl}
+            //     renderData={ajaxData => { this.renderRefresh(ajaxData); return <div />; }}
+            // />)
+            else
+                <div>History refresh unavailable</div>;
+            console.log('done creating where');
             return (<div>
                     <ProfileDisplay me={this.props.me}/>
+                    {middleWhere}
                     <HistoryTable data={this.props.data}/>
                 </div>);
         };
