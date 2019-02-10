@@ -483,7 +483,7 @@ var addImpureExtensions = ():void => {
         });
     })();
 
-    var debounceChange: DebounceChangeDelegate = function(callback: AnyAction, e, ...args){
+    var debounceChange: DebounceChangeDelegate = function(callback: ActionAny, e, ...args){
         if(!exports.isDefined(callback)){
             console.info('no callback for debounceChange', e.target, typeof callback, callback);
             return;

@@ -1,14 +1,12 @@
 /* global global module window */
 "use strict";
 // export module Extensions{
-var findJsParent = function () {
-    return ((typeof module !== "undefined" && module && module.exports
-        || typeof module !== "undefined" && module)
-        || typeof global !== "undefined" && global
-        || typeof window !== "undefined" && window);
-};
+var findJsParent = () => ((typeof module !== "undefined" && module && module.exports
+    || typeof module !== "undefined" && module)
+    || typeof global !== "undefined" && global
+    || typeof window !== "undefined" && window);
 // prototypal extensions and polyfills
-var addImpureExtensions = function () {
+var addImpureExtensions = () => {
     // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
     // polyfill for older browsers, which this project really doesn't need
     if (!Object.keys) {
@@ -50,20 +48,18 @@ var addImpureExtensions = function () {
         return s;
     };
     // adding static and instance methods
-    String['contains'] = function (s, delimiter) {
-        return s != null && delimiter != null && delimiter != "" && s.indexOf(delimiter) >= 0;
-    };
+    String['contains'] = (s, delimiter) => s != null && delimiter != null && delimiter != "" && s.indexOf(delimiter) >= 0;
     String.prototype.contains = function (delimiter) {
         return String.contains(this, delimiter);
     };
     // http://stackoverflow.com/a/1050782/57883
-    Date['addHours'] = function (dt, h) {
+    Date['addHours'] = (dt, h) => {
         dt.setTime(dt.getTime() + (h * 60 * 60 * 1000));
     };
     Date.prototype.addHours = function (h) {
         Date.addHours(this, h);
     };
-    Date.isValidDate = function (dt) {
+    Date.isValidDate = (dt) => {
         if (dt == null)
             return false;
         // check if it is a Date via https://stackoverflow.com/questions/643782/how-to-check-whether-an-object-is-a-date
@@ -131,14 +127,14 @@ var addImpureExtensions = function () {
     // Array.prototype['remove'] = function<T>(item:T){
     // mutation : removes an item from the array, returning the removed item or undefined
     Array.prototype.remove = function (item) {
-        var index = this.indexOf(item);
+        const index = this.indexOf(item);
         if (index >= 0)
             return this.splice(index, 1)[0];
         return undefined;
     };
     // Array.prototype.replace = function<T>(item:T,replacement:T){
     Array.prototype.replace = function (item, replacement) {
-        var index = this.indexOf(item);
+        const index = this.indexOf(item);
         if (index >= 0) {
             this[index] = replacement;
             return true;
@@ -151,7 +147,7 @@ var addImpureExtensions = function () {
 (function (exports) {
     addImpureExtensions();
     exports.findJsParent = exports.findJsParent || findJsParent;
-    exports.isDifferent = exports.isDifferent = function (x, y) {
+    exports.isDifferent = exports.isDifferent = (x, y) => {
         var isX = x != null;
         var isY = y != null;
         if (!isX && !isY)
@@ -162,15 +158,14 @@ var addImpureExtensions = function () {
             return true;
         return x != y;
     };
-    exports.todo = function (msg) {
+    exports.todo = (msg) => {
         console.error((msg ? msg + ":" : '') + 'item stubbed as todo called');
     };
-    exports.guid = function () { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    exports.guid = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
-    }); };
-    exports.redirect = function (url, app) {
-        if (app === void 0) { app = exports; }
+    });
+    exports.redirect = (url, app = exports) => {
         console.log('redirecting to ', url);
         if (app.location != null) {
             app.location.href = url;
@@ -182,15 +177,15 @@ var addImpureExtensions = function () {
             console.error('unable to find redirection mechanism');
         }
     };
-    exports.post = function (url, onLoad, onFailure, contentType, data) {
-        var oReq = new XMLHttpRequest();
+    exports.post = (url, onLoad, onFailure, contentType, data) => {
+        const oReq = new XMLHttpRequest();
         oReq.addEventListener("load", onLoad);
         oReq.addEventListener("error", onFailure);
         oReq.open('POST', url, true);
         oReq.setRequestHeader('Content-type', contentType);
         switch (contentType) {
             case 'application/json':
-                var body = JSON.stringify(data);
+                let body = JSON.stringify(data);
                 oReq.send(body);
                 break;
             case 'application/x-www-form-urlencoded':
@@ -199,15 +194,15 @@ var addImpureExtensions = function () {
                 break;
         }
     };
-    exports.fetchB = function (url, onLoad, onFailure, method) {
-        var oReq = new XMLHttpRequest();
+    exports.fetchB = (url, onLoad, onFailure, method) => {
+        const oReq = new XMLHttpRequest();
         oReq.addEventListener("load", onLoad);
         oReq.addEventListener("error", onFailure);
         oReq.open(method || "GET", url);
         oReq.send();
     };
-    exports.fetchBT = function (url, onLoad, onFailure, method, onLoadFailure) {
-        var onLoadWrapped = function (pe) {
+    exports.fetchBT = (url, onLoad, onFailure, method, onLoadFailure) => {
+        var onLoadWrapped = (pe) => {
             console.group('fetchT onLoadWrapped', url);
             var t;
             try {
@@ -240,11 +235,11 @@ var addImpureExtensions = function () {
         };
         exports.fetchB(url, onLoadWrapped, onFailure, method);
     };
-    exports.inspect = function (x, title, propNames) {
-        var logIt = function (value) { return title ? console.log(title, value) : console.log(value); };
+    exports.inspect = (x, title, propNames) => {
+        const logIt = (value) => title ? console.log(title, value) : console.log(value);
         if (propNames) {
             if (Array.isArray(propNames)) {
-                propNames.map(function (propName) { return logIt(x[propName]); });
+                propNames.map(propName => logIt(x[propName]));
             }
             else {
                 logIt(x[propNames]);
@@ -254,7 +249,7 @@ var addImpureExtensions = function () {
             logIt(x);
         return x;
     };
-    exports.before = function (s, delimiter) {
+    exports.before = (s, delimiter) => {
         if (!delimiter)
             throw Error('no delimiter provided in "' + s + "'.before(delimiter)");
         var i = s.indexOf(delimiter);
@@ -265,7 +260,7 @@ var addImpureExtensions = function () {
     String.prototype.before = function (delimiter) {
         return exports.before(this, delimiter);
     };
-    exports.after = function (s, delimiter) {
+    exports.after = (s, delimiter) => {
         if (!delimiter)
             throw Error('no delimiter provided in "' + s + "'.after(delimiter)");
         var i = s.indexOf(delimiter);
@@ -283,13 +278,13 @@ var addImpureExtensions = function () {
             return obj;
         // Handle Date
         if (obj instanceof Date) {
-            var copy = new Date();
+            let copy = new Date();
             copy.setTime(obj.getTime());
             return copy;
         }
         // Handle Array
         if (obj instanceof Array && Array.isArray(obj)) {
-            var copy = [];
+            let copy = [];
             for (var i = 0, len = obj.length; i < len; i++) {
                 copy[i] = clone(obj[i]);
             }
@@ -297,7 +292,7 @@ var addImpureExtensions = function () {
         }
         // Handle Object
         if (obj instanceof Object) {
-            var copy = {};
+            let copy = {};
             for (var attr in obj) {
                 if (obj.hasOwnProperty(attr))
                     copy[attr] = clone(obj[attr]);
@@ -308,20 +303,20 @@ var addImpureExtensions = function () {
     };
     // type PickDelegate =
     // since the syntax doesn't seem to support object literal picks {[key]:value}, make a syntax helper
-    exports.makePick = function (key, value) {
+    exports.makePick = (key, value) => {
         var x = {};
         x[key] = value;
         return x;
     };
-    var pickValue = function () {
-        return function (value) { return value; };
+    var pickValue = () => {
+        return (value) => value;
     };
     exports.makePickFromObj = pickValue;
     // add compiler error for places whose accept type is wider than what we want to be constrained to
     // https://schneidenbach.gitbooks.io/typescript-cookbook/nameof-operator.html
-    exports.nameof = function (name) { return name; };
+    exports.nameof = (name) => name;
     // const nameof = <T>(name: keyof T) => name;
-    exports.flattenArray = function (a, recurse) {
+    exports.flattenArray = (a, recurse) => {
         if (a == null)
             return [];
         if (Array.isArray(a)) {
@@ -331,15 +326,15 @@ var addImpureExtensions = function () {
                 return result;
             var index;
             while ((index = result.findIndex(Array.isArray)) > -1)
-                result.splice.apply(result, [index, 1].concat(result[index]));
+                result.splice(index, 1, ...result[index]);
             return result;
         }
         return [a];
     };
-    exports.isDefined = function (o) { return typeof o !== 'undefined' && o != null; };
-    exports.isPositive = function (x) { return +x > 0; };
+    exports.isDefined = (o) => typeof o !== 'undefined' && o != null;
+    exports.isPositive = (x) => +x > 0;
     var getValidateClasses = exports.getValidateClasses =
-        function (isValid) {
+        (isValid) => {
             if (isValid === undefined)
                 return [];
             // returning bootstrap-classes
@@ -368,18 +363,14 @@ var addImpureExtensions = function () {
             timer = setTimeout(callback, ms); //setTimeout(callback,ms);
         });
     })();
-    var debounceChange = function (callback, e) {
-        var args = [];
-        for (var _i = 2; _i < arguments.length; _i++) {
-            args[_i - 2] = arguments[_i];
-        }
+    var debounceChange = function (callback, e, ...args) {
         if (!exports.isDefined(callback)) {
             console.info('no callback for debounceChange', e.target, typeof callback, callback);
             return;
         }
         e.persist();
         args.unshift(e.target.value);
-        exports.debounce(function () { return callback.apply(void 0, args); }, 500);
+        exports.debounce(() => callback(...args), 500);
     };
     exports.debounceChange = debounceChange;
     return exports;

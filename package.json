@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@types/express": "github:types/npm-express",
+    "@types/mongoose": "^5.3.12",
     "@types/node": "^10.12.24",
     "@types/react": "^16.8.2",
     "@types/react-dom": "^16.8.0"

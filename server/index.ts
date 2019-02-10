@@ -3,6 +3,7 @@ import { RequestHandler, ErrorHandler } from "express/lib/router";
 interface CookieRequest extends Request {
     cookies?: any;
 }
+// translation failed
 const express = require('express')
 
 const cookieParser = require('cookie-parser')
@@ -11,7 +12,7 @@ import fs from 'fs'
 
 const clientSecret = process.env.ubersecret
 const util = require('util')
-const dal = require('./dal.js')
+import * as dal from './dal'
 if (clientSecret == null)
     throw 'please set the ubersecret env variable to your client_secret'
 const port = process.env.PORT || 3000;
@@ -36,7 +37,7 @@ const errorHandler:ErrorHandler = (err, req, res: Response | undefined, _next, .
 }
 
 const helloDbHandler:RequestHandler = (_, res) => {
-    dal.storeKitten()
+    dal.Kittens.storeKitten()
     res.send('yay db!')
 }
 const indexHandler:RequestHandler = (req: CookieRequest, res,next) => {
@@ -83,12 +84,12 @@ const homeHandler:RequestHandler= (req:CookieRequest, res:Response) => {
     const send = (x: any) => res.send(x)
     const bearer = req.cookies.bearer
     ubering.getMe(bearer, (me: UberProfile, _isFull: boolean) => {
-        dal.saveProfile(me, () => {
-            dal.getHistory(me.uuid, function (item: HistoryData) {
+        dal.Profiles.saveProfile(me, () => {
+            dal.Histories.getHistory(me.uuid, function (item: HistoryData) {
                 if (item == null) {
                     console.log('history not found in db')
                     ubering.getHistory(bearer, (history:HistoryData) => {
-                        dal.saveHistory(history, () => {
+                        dal.Histories.saveHistory(history, () => {
                             return getTableHtml(me, history, send, true)
                         })
                     })
@@ -128,10 +129,10 @@ app.get('/history/sample/table', (_:Request, res:Response) => {
 
 app.get('/db/hello', helloDbHandler)
 app.get('/db/fetch', (_:Request, res:Response) => {
-    dal.getKittens((k:any) => res.send(k))
+    dal.Kittens.getKittens((k:any) => res.send(k))
 })
 app.get('/db/profiles', (_:Request, res:Response) => {
-    dal.getProfiles((profiles:UberProfile[]) => {
+    dal.Profiles.getProfiles((profiles:UberProfile[]) => {
         res.send(profiles)
     }
     )
