@@ -50,6 +50,9 @@ declare var google: any;
     const HistoryTable = ({ data }: { data: HistoryData | undefined }) => {
         if (data == null || data.history == null)
             return <div>No history found!</div>;
+        else if(!data.history.length || data.history.length == 0){
+            return <div>History found, but was empty</div>
+        }
         else {
             return (<div>
                 <table className="table is-bordered is-striped">
@@ -115,7 +118,18 @@ declare var google: any;
             if (this.state.ajaxing) {
                 console.log('fetching!', context.historyUrl)
                 context.fetch(context.historyUrl)
-                    .then((response: any) => { console.log('resp', response); return response.json() })
+                    .then((response: any) => {
+                        console.log('resp', response);
+                        try {
+
+                            var json = response.json()
+                            console.log('json?',json)
+                            return json
+                        }
+                        catch(c){
+                            console.error(c)
+                            return response.text()}
+                    })
                     .then(this.renderRefresh)
             }
             var middleWhere: JSX.Element | undefined;
@@ -129,7 +143,7 @@ declare var google: any;
                 <div>
                     <ProfileDisplay me={this.props.me} />
                     {middleWhere}
-                    <HistoryTable data={this.props.data} />
+                    <HistoryTable data={this.state.data} />
                 </div>
             )
         }
