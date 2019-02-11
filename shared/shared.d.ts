@@ -46,6 +46,10 @@ interface HistoryData {
     offset: number
     history: HistoryItem[]
 }
+interface HistoryStore{
+    uuid: UberUserIdentifier
+    history:HistoryItem[]
+}
 interface UberProfile {
     picture: Uri
     first_name: string

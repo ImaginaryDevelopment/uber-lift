@@ -7,6 +7,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -80,6 +87,39 @@ const getTableHtml = (me, history, f, allowRefresh) => Promise.all([readFile('/p
         .replace("historyUrl = null", allowRefresh ? 'historyUrl = \'' + historyUrl + '\'' : 'historyUrl = null');
     return f(output);
 });
+const foldHistory = (bearer, uuid) => __awaiter(this, void 0, void 0, function* () {
+    var e_1, _a;
+    var fullHistory = [];
+    var historyiter = ubering.getFullHistory(bearer);
+    try {
+        for (var historyiter_1 = __asyncValues(historyiter), historyiter_1_1; historyiter_1_1 = yield historyiter_1.next(), !historyiter_1_1.done;) {
+            const x = historyiter_1_1.value;
+            fullHistory.push(x);
+        }
+    }
+    catch (e_1_1) { e_1 = { error: e_1_1 }; }
+    finally {
+        try {
+            if (historyiter_1_1 && !historyiter_1_1.done && (_a = historyiter_1.return)) yield _a.call(historyiter_1);
+        }
+        finally { if (e_1) throw e_1.error; }
+    }
+    fullHistory = fullHistory.reverse();
+    var history;
+    if (fullHistory.length == 0) {
+        var emptyHistory = { uuid: uuid, history: [] };
+        history = emptyHistory;
+    }
+    else {
+        var filledHistory = {
+            uuid: uuid,
+            history: fullHistory.map(x => x.history).reduce((a, b) => a.concat(b))
+        };
+        history = filledHistory;
+    }
+    yield dal.Histories.saveHistory(history);
+    return history;
+});
 const homeHandler = (req, res) => {
     if (req.cookies == null || req.cookies.bearer == null)
         return res.redirect('/');
@@ -87,25 +127,19 @@ const homeHandler = (req, res) => {
     const send = (x) => res.send(x);
     const bearer = req.cookies.bearer;
     ubering.getMe(bearer, (me, _isFull) => __awaiter(this, void 0, void 0, function* () {
+        res.cookie('uuid', me.uuid);
         yield dal.Profiles.saveProfile(me, () => __awaiter(this, void 0, void 0, function* () {
-            yield dal.Histories.getHistory(me.uuid, function (item) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    console.log('dal.getHistory callback');
-                    if (item == null || item == [] || item.history == null) {
-                        console.log('history not found in db');
-                        ubering.getHistory(bearer, (history) => {
-                            console.log('ubering.getHistory callback');
-                            dal.Histories.saveHistory(me.uuid, history, () => __awaiter(this, void 0, void 0, function* () {
-                                return yield getTableHtml(me, history, send, true);
-                            }));
-                        });
-                    }
-                    else {
-                        console.log('history found in db', util.inspect(item), item);
-                        yield getTableHtml(me, item, send, true);
-                    }
-                });
-            });
+            const item = yield dal.Histories.getHistory(me.uuid);
+            console.log('dal.getHistory callback');
+            if (item == null || item == [] || item.history == null) {
+                console.log('history not found in db');
+                var history = yield foldHistory(bearer, me.uuid);
+                return yield getTableHtml(me, history, send, true);
+            }
+            else {
+                console.log('history found in db', util.inspect(item), item);
+                yield getTableHtml(me, item, send, true);
+            }
         }));
     }));
 };
@@ -117,12 +151,13 @@ app.get('/hello', (_req, res) => res.send('Hello World!'));
 app.get('/home', homeHandler);
 app.get(historyUrl, ((req, res) => {
     const bearer = req.cookies.bearer;
+    const uuid = req.cookies.me;
     if (bearer == null)
         return res.send('No bearer cookie found');
-    ubering.getHistory(bearer, (history) => {
-        console.log("refreshing history");
-        res.send(history);
-    });
+    if (uuid == null)
+        return res.send('no user cookie found');
+    var history = foldHistory(bearer, uuid);
+    res.send(history);
 }));
 app.get('/history/sample/raw', (_, res) => res.sendfile(__dirname + '/public/samplehistory.json'));
 app.get('/history/sample/table', (_, res) => {

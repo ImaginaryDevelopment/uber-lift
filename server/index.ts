@@ -25,7 +25,7 @@ const readFile = (relPath: string): Promise<string> =>
             err != null ? reject(err) : resolve(text)
         ))
 
-const errorHandler:ErrorHandler = (err, req, res: Response | undefined, _next, ...rest: any) => {
+const errorHandler: ErrorHandler = (err, req, res: Response | undefined, _next, ...rest: any) => {
     if (!res || !res.status || !res.send)
         throw { Message: 'Inappropriate errorHandler call', err }
     if (err && err.stack && req && res) {
@@ -36,11 +36,11 @@ const errorHandler:ErrorHandler = (err, req, res: Response | undefined, _next, .
     return res.status(500).send('Error' + util.inspect({ err, req, ...rest }))
 }
 
-const helloDbHandler:RequestHandler = (_, res) => {
+const helloDbHandler: RequestHandler = (_, res) => {
     dal.Kittens.storeKitten()
     res.send('yay db!')
 }
-const indexHandler:RequestHandler = (req: CookieRequest, res,next) => {
+const indexHandler: RequestHandler = (req: CookieRequest, res, next) => {
     if (req.cookies != null && req.cookies.bearer != null) {
         return res.redirect('/home')
     }
@@ -57,7 +57,7 @@ const indexHandler:RequestHandler = (req: CookieRequest, res,next) => {
     } else {
         console.log('ubering!')
         ubering.getBearer(clientSecret, req.query.code, req.protocol, req.headers.host,
-            (bearer:string) => {
+            (bearer: string) => {
                 res.cookie('bearer', bearer)
                 res.redirect('/home')
             })
@@ -65,7 +65,7 @@ const indexHandler:RequestHandler = (req: CookieRequest, res,next) => {
 }
 const historyUrl = '/history/refresh'
 
-const getTableHtml = (me: UberProfile, history: HistoryData, f: (Func1<string, any>), allowRefresh: boolean) =>
+const getTableHtml = (me: UberProfile, history: HistoryStore, f: (Func1<string, any>), allowRefresh: boolean) =>
     Promise.all([readFile('/public/table.html'), readFile('/public/menu.html')])
         .then(([html, menuHtml]) => {
             const data = JSON.stringify(history)
@@ -78,28 +78,45 @@ const getTableHtml = (me: UberProfile, history: HistoryData, f: (Func1<string, a
                     .replace("historyUrl = null", allowRefresh ? 'historyUrl = \'' + historyUrl + '\'' : 'historyUrl = null')
             return f(output)
         })
-const homeHandler:RequestHandler= (req:CookieRequest, res:Response) => {
+const foldHistory = async (bearer: string, uuid: UberUserIdentifier) => {
+    var fullHistory: HistoryData[] = [];
+    var historyiter = ubering.getFullHistory(bearer);
+    for await (const x of historyiter) {
+        fullHistory.push(x)
+    }
+    fullHistory = fullHistory.reverse()
+    var history: HistoryStore;
+    if (fullHistory.length == 0) {
+        var emptyHistory: HistoryStore = { uuid: uuid, history: [] }
+        history = emptyHistory;
+    } else {
+        var filledHistory: HistoryStore = {
+            uuid: uuid,
+            history: fullHistory.map(x => x.history).reduce((a, b) => a.concat(b))
+        }
+        history = filledHistory;
+    }
+    await dal.Histories.saveHistory(history)
+    return history;
+}
+const homeHandler: RequestHandler = (req: CookieRequest, res: Response) => {
     if (req.cookies == null || req.cookies.bearer == null) return res.redirect('/')
     // necessary https://stackoverflow.com/questions/41801723/express-js-cannot-read-property-req-of-undefined
     const send = (x: any) => res.send(x)
-    const bearer = req.cookies.bearer
+    const bearer: string = req.cookies.bearer
     ubering.getMe(bearer, async (me: UberProfile, _isFull: boolean) => {
+        res.cookie('uuid', me.uuid)
         await dal.Profiles.saveProfile(me, async () => {
-            await dal.Histories.getHistory(me.uuid, async function (item: HistoryData) {
-                console.log('dal.getHistory callback')
-                if (item as any == null || item as any == [] || item.history == null) {
-                    console.log('history not found in db')
-                    ubering.getHistory(bearer, (history:HistoryData) => {
-                        console.log('ubering.getHistory callback')
-                        dal.Histories.saveHistory(me.uuid,history,async () => {
-                            return await getTableHtml(me, history, send, true)
-                        })
-                    })
-                } else {
-                    console.log('history found in db',util.inspect(item),item)
-                    await getTableHtml(me, item, send, true)
-                }
-            })
+            const item: HistoryStore | undefined = await dal.Histories.getHistory(me.uuid)
+            console.log('dal.getHistory callback')
+            if (item == null || item as any == [] || item.history == null) {
+                console.log('history not found in db')
+                var history = await foldHistory(bearer, me.uuid)
+                return await getTableHtml(me, history, send, true);
+            } else {
+                console.log('history found in db', util.inspect(item), item)
+                await getTableHtml(me, item, send, true)
+            }
         })
     })
 }
@@ -107,39 +124,40 @@ const homeHandler:RequestHandler= (req:CookieRequest, res:Response) => {
 app.get('/', indexHandler as RequestHandler)
 app.use(express.static('client'))
 app.use(express.static('public', ['html', 'htm', 'json']))
-app.get('*', (req:Request, _:any, next:Action) => { console.log('Request for ' + req.url); next() })
-app.get('/hello', (_req:any, res:Response) => res.send('Hello World!'))
+app.get('*', (req: Request, _: any, next: Action) => { console.log('Request for ' + req.url); next() })
+app.get('/hello', (_req: any, res: Response) => res.send('Hello World!'))
 app.get('/home', homeHandler)
-app.get(historyUrl, ((req:CookieRequest, res:Response) => {
+app.get(historyUrl, ((req: CookieRequest, res: Response) => {
     const bearer = req.cookies.bearer
+    const uuid = req.cookies.me
     if (bearer == null) return res.send('No bearer cookie found')
-    ubering.getHistory(bearer, (history:HistoryData) => {
-        console.log("refreshing history")
-        res.send(history)
-    })
-}) as any )
-app.get('/history/sample/raw', (_:Request, res:Response) => res.sendfile(__dirname + '/public/samplehistory.json'))
-app.get('/history/sample/table', (_:Request, res:Response) => {
+    if (uuid == null) return res.send('no user cookie found')
+    var history = foldHistory(bearer, uuid)
+    res.send(history)
+
+}) as any)
+app.get('/history/sample/raw', (_: Request, res: Response) => res.sendfile(__dirname + '/public/samplehistory.json'))
+app.get('/history/sample/table', (_: Request, res: Response) => {
     Promise.all([readFile('/public/sampleuser.json'), readFile('/public/samplehistory.json')])
         .then(([me, history]) => {
 
             // necessary https://stackoverflow.com/questions/41801723/express-js-cannot-read-property-req-of-undefined
-            const send = (x:any) => res.send(x)
+            const send = (x: any) => res.send(x)
             getTableHtml(JSON.parse(me), JSON.parse(history), send, false)
         })
 })
 
 app.get('/db/hello', helloDbHandler)
-app.get('/db/fetch', (_:Request, res:Response) => {
-    dal.Kittens.getKittens((k:any) => res.send(k))
+app.get('/db/fetch', (_: Request, res: Response) => {
+    dal.Kittens.getKittens((k: any) => res.send(k))
 })
-app.get('/db/profiles', (_:Request, res:Response) => {
-    dal.Profiles.getProfiles(async (profiles:UberProfile[]) => {
+app.get('/db/profiles', (_: Request, res: Response) => {
+    dal.Profiles.getProfiles(async (profiles: UberProfile[]) => {
         res.send(profiles)
     }
     )
 })
-app.get('/markers', (_req:any, res:Response) => res.sendFile(__dirname + '/public/markers.html'))
+app.get('/markers', (_req: any, res: Response) => res.sendFile(__dirname + '/public/markers.html'))
 // express error-handling: https://expressjs.com/en/guide/error-handling.html
 app.use(errorHandler)
 app.listen(port, () => console.log("Example app listening on port " + port))

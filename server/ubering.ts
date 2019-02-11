@@ -53,21 +53,37 @@ export const getFromUber = (bearer: string, uri: string, f: Action1<any>) => {
         f(jBody)
     })
 }
-export const getHistory = (bearer: string, fHistory: Action1<any>) => {
+
+export async function* getFullHistory(bearer: string) {
+    var pulled = 0;
+    var result: HistoryData = await getHistory(bearer, 0);
+    pulled += result.history.length;
+    yield result;
+    var errored = false
+    while (pulled < result.count && !errored) {
+        result = await getHistory(bearer, pulled);
+        pulled += result.history.length;
+        yield result;
+    }
+}
+export const getHistory = (bearer: string, offset: number): Promise<HistoryData> => {
     console.log('fetching fresh history')
-    request({
-        headers: { Authorization: 'Bearer ' + bearer },
-        uri: 'https://api.uber.com/v1.2/history',
-        method: 'GET'
-    }, (err: any, _: any, body: string | undefined) => {
-        if (err != null) {
-            var e = JSON.stringify(err)
-            console.error(e)
-            throw e
-        }
-        if (body == null) throw 'getHistory no body'
-        const jBody = JSON.parse(body)
-        fHistory(jBody)
+    return new Promise((resolve, reject) => {
+        request({
+            headers: { Authorization: 'Bearer ' + bearer },
+            uri: 'https://api.uber.com/v1.2/history' + (offset > 0 ? '?offset=' + offset : ''),
+            method: 'GET'
+        }, (err: any, _: any, body: string | undefined) => {
+            if (err != null) {
+                var e = JSON.stringify(err)
+                console.error(e)
+                return reject(e)
+            }
+            if (body == null) return reject('getHistory no body')
+            const jBody: HistoryData = JSON.parse(body)
+            return resolve(jBody)
+        })
+
     })
 }
 export const getMe = (bearer: string, f: Action2<UberProfile, boolean>) => {

@@ -42,28 +42,36 @@ getOrCreateSchema('Profile', {
 });
 getOrCreateSchema('History', {
     uuid: String,
-    status: String,
-    distance: Number,
-    product_id: String,
-    start_time: Number,
-    start_city: {
-        latitude: Number,
-        display_name: String,
-        longitude: Number
+    history: {
+        status: String,
+        distance: Number,
+        product_id: String,
+        start_time: Number,
+        start_city: {
+            latitude: Number,
+            display_name: String,
+            longitude: Number,
+        },
+        end_time: Number,
+        request_id: String,
+        request_time: Number
     }
 });
 const connect = (fConn) => __awaiter(this, void 0, void 0, function* () {
-    // returns a promise of a connection
-    const connectResult = mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/test', { useNewUrlParser: true });
-    mongoose.connection.once('open', () => __awaiter(this, void 0, void 0, function* () {
-        console.log('connection is open');
-        const fConnResult = fConn(mongoose.connection);
-        if (fConnResult == null || !fConnResult.then)
-            console.error('fConnResult wasn\'t a promise this time');
-        yield fConnResult;
-    }));
-    yield connectResult;
-    console.log('connect is over');
+    return new Promise((resolve, reject) => {
+        try {
+            // returns a promise of a connection
+            const connectResult = mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/test', { useNewUrlParser: true });
+            mongoose.connection.once('open', () => {
+                console.log('connection is open');
+                const fConnResult = fConn(mongoose.connection);
+                resolve(fConnResult);
+            });
+        }
+        catch (e) {
+            reject(e);
+        }
+    });
 });
 var Kittens;
 (function (Kittens) {
@@ -150,25 +158,31 @@ var Profiles;
 })(Profiles = exports.Profiles || (exports.Profiles = {}));
 var Histories;
 (function (Histories) {
-    Histories.getHistory = (uuid, f) => __awaiter(this, void 0, void 0, function* () {
-        yield connect(() => __awaiter(this, void 0, void 0, function* () {
-            // const filter = { uuid: uuid }
-            const { name, s } = schemas["History"];
-            const fAll = getAll(name, s);
-            console.log('about to fAll');
-            const fAllResult = fAll(f);
-            if (fAllResult && fAllResult.then)
-                console.error('fAllResult was promise');
+    Histories.getHistory = (uuid) => __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                yield connect(() => __awaiter(this, void 0, void 0, function* () {
+                    // const filter = { uuid: uuid }
+                    const filter = { uuid };
+                    const m = schemas.History;
+                    const findOneResult = m.M.findOne(filter);
+                    const result = yield Promise.resolve(findOneResult);
+                    resolve(result);
+                }));
+            }
+            catch (e) {
+                reject(e);
+            }
         }));
     });
-    Histories.saveHistory = (uuid, history, f) => __awaiter(this, void 0, void 0, function* () {
+    Histories.saveHistory = (history) => __awaiter(this, void 0, void 0, function* () {
         yield connect(() => __awaiter(this, void 0, void 0, function* () {
-            const filter = { uuid };
+            const filter = { uuid: history.uuid };
             const m = schemas.History;
             const findOneResult = m.M.findOne(filter);
             if (findOneResult && findOneResult.then)
                 console.error('findOneResult is a promise');
-            const dbHistory = yield findOneResult;
+            const dbHistory = yield Promise.resolve(findOneResult);
             if (dbHistory != null) {
                 console.log('updating history');
                 Object.keys(history).map(k => dbHistory[k] = history[k]);
@@ -180,7 +194,7 @@ var Histories;
                 x.save((err, documentHistory, numRows) => console.log('inserted history', documentHistory));
             }
             console.log('done waiting for saveHistory findOne');
-            yield f(history);
+            return history;
         }));
     });
 })(Histories = exports.Histories || (exports.Histories = {}));
