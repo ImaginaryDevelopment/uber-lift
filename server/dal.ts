@@ -39,7 +39,7 @@ getOrCreateSchema('Profile', {
 })
 getOrCreateSchema('History', {
     uuid: String,
-    history: {
+    history: [{
         status: String,
         distance: Number,
         product_id: String,
@@ -52,7 +52,7 @@ getOrCreateSchema('History', {
         end_time: Number,
         request_id: String,
         request_time: Number
-    }
+    }]
 })
 
 const connect = async <T>(fConn: Func1<Connection, T>): Promise<T> => new Promise((resolve, reject) => {

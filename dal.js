@@ -42,20 +42,20 @@ getOrCreateSchema('Profile', {
 });
 getOrCreateSchema('History', {
     uuid: String,
-    history: {
-        status: String,
-        distance: Number,
-        product_id: String,
-        start_time: Number,
-        start_city: {
-            latitude: Number,
-            display_name: String,
-            longitude: Number,
-        },
-        end_time: Number,
-        request_id: String,
-        request_time: Number
-    }
+    history: [{
+            status: String,
+            distance: Number,
+            product_id: String,
+            start_time: Number,
+            start_city: {
+                latitude: Number,
+                display_name: String,
+                longitude: Number,
+            },
+            end_time: Number,
+            request_id: String,
+            request_time: Number
+        }]
 });
 const connect = (fConn) => __awaiter(this, void 0, void 0, function* () {
     return new Promise((resolve, reject) => {
@@ -180,6 +180,8 @@ var Histories;
             const filter = { uuid: history.uuid };
             const m = schemas.History;
             const findOneResult = m.M.findOne(filter);
+            if (findOneResult && findOneResult.then)
+                console.error('findOneResult is a promise');
             const dbHistory = yield Promise.resolve(findOneResult);
             if (dbHistory != null) {
                 console.log('updating history');
