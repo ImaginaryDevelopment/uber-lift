@@ -64,9 +64,9 @@ declare var google: any;
                     </thead>
                     <tbody>
                         {
-                            data.history.map(hi =>
+                            data.history.sort((a,b) => a.start_time < b.start_time ? 1 : -1).map(hi =>
                                 <tr key={hi.request_id}>
-                                    <td>{new Date(hi.start_time).toLocaleDateString()}</td>
+                                    <td>{new Date(hi.start_time * 1000).toLocaleDateString()}</td>
                                     <td>{hi.start_city.display_name}</td>
                                 </tr>
                             )
