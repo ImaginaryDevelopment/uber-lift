@@ -180,8 +180,6 @@ var Histories;
             const filter = { uuid: history.uuid };
             const m = schemas.History;
             const findOneResult = m.M.findOne(filter);
-            if (findOneResult && findOneResult.then)
-                console.error('findOneResult is a promise');
             const dbHistory = yield Promise.resolve(findOneResult);
             if (dbHistory != null) {
                 console.log('updating history');

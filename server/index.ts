@@ -127,12 +127,12 @@ app.use(express.static('public', ['html', 'htm', 'json']))
 app.get('*', (req: Request, _: any, next: Action) => { console.log('Request for ' + req.url); next() })
 app.get('/hello', (_req: any, res: Response) => res.send('Hello World!'))
 app.get('/home', homeHandler)
-app.get(historyUrl, ((req: CookieRequest, res: Response) => {
+app.get(historyUrl, (async (req: CookieRequest, res: Response) => {
     const bearer = req.cookies.bearer
-    const uuid = req.cookies.me
+    const uuid = req.cookies.uuid
     if (bearer == null) return res.send('No bearer cookie found')
     if (uuid == null) return res.send('no user cookie found')
-    var history = foldHistory(bearer, uuid)
+    var history = await Promise.resolve(foldHistory(bearer, uuid))
     res.send(history)
 
 }) as any)

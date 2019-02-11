@@ -149,16 +149,16 @@ app.use(express.static('public', ['html', 'htm', 'json']));
 app.get('*', (req, _, next) => { console.log('Request for ' + req.url); next(); });
 app.get('/hello', (_req, res) => res.send('Hello World!'));
 app.get('/home', homeHandler);
-app.get(historyUrl, ((req, res) => {
+app.get(historyUrl, ((req, res) => __awaiter(this, void 0, void 0, function* () {
     const bearer = req.cookies.bearer;
-    const uuid = req.cookies.me;
+    const uuid = req.cookies.uuid;
     if (bearer == null)
         return res.send('No bearer cookie found');
     if (uuid == null)
         return res.send('no user cookie found');
-    var history = foldHistory(bearer, uuid);
+    var history = yield Promise.resolve(foldHistory(bearer, uuid));
     res.send(history);
-}));
+})));
 app.get('/history/sample/raw', (_, res) => res.sendfile(__dirname + '/public/samplehistory.json'));
 app.get('/history/sample/table', (_, res) => {
     Promise.all([readFile('/public/sampleuser.json'), readFile('/public/samplehistory.json')])
